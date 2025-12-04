@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3 uid="uid://dg46ynffklloi"]
+
+[ext_resource type="Script" uid="uid://cbm3w3xe34xqy" path="res://Scripts/BlockHandling/CodeBlock.gd" id="1_tqm1s"]
+[ext_resource type="Texture2D" uid="uid://d4kapkn2thjrv" path="res://Assets/CodeBlocks/BlockBackground.png" id="2_hstm6"]
+
+[node name="CodeBlock" type="Area2D"]
+script = ExtResource("1_tqm1s")
+
+[node name="Background" type="NinePatchRect" parent="."]
+offset_right = 53.0
+offset_bottom = 40.0
+texture = ExtResource("2_hstm6")
+patch_margin_left = 2
+patch_margin_top = 2
+patch_margin_right = 2
+patch_margin_bottom = 2
+
+[node name="Label" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]

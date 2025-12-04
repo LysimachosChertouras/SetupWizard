@@ -1,0 +1,57 @@
+[gd_scene load_steps=10 format=3 uid="uid://bfc6rqccgyicl"]
+
+[ext_resource type="Texture2D" uid="uid://coe8iqxd56j4e" path="res://Assets/Wizard/Wizard_Anim.png" id="1_byqed"]
+[ext_resource type="Script" uid="uid://c76abg7dxo0hy" path="res://Scripts/Wizard/Wizard_main.gd" id="1_mqqw1"]
+[ext_resource type="Script" uid="uid://b0tfx3bfaq720" path="res://Scripts/Wizard/movement_node.gd" id="2_ilitf"]
+[ext_resource type="Script" uid="uid://bqcarartcn1tt" path="res://Scripts/Wizard/pickup_node.gd" id="3_be21u"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ilitf"]
+radius = 16.03122
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_33wk7"]
+atlas = ExtResource("1_byqed")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mqqw1"]
+atlas = ExtResource("1_byqed")
+region = Rect2(0, 32, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_be21u"]
+animations = [{
+"frames": [{
+"duration": 2.01,
+"texture": SubResource("AtlasTexture_33wk7")
+}, {
+"duration": 2.01,
+"texture": SubResource("AtlasTexture_mqqw1")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_33wk7"]
+radius = 37.01351
+
+[node name="Wizard" type="CharacterBody2D"]
+z_index = 1
+script = ExtResource("1_mqqw1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_ilitf")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(1, 0)
+sprite_frames = SubResource("SpriteFrames_be21u")
+frame_progress = 0.744221
+
+[node name="PickupArea" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PickupArea"]
+shape = SubResource("CircleShape2D_33wk7")
+
+[node name="PickupNode" type="Node2D" parent="."]
+script = ExtResource("3_be21u")
+
+[node name="MovementNode" type="Node2D" parent="."]
+script = ExtResource("2_ilitf")

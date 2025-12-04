@@ -1,0 +1,37 @@
+[gd_scene load_steps=9 format=3 uid="uid://bwom6kpk0belt"]
+
+[ext_resource type="Script" uid="uid://eiom31sjd5e8" path="res://Scripts/Scenes/main.gd" id="1_bo1nx"]
+[ext_resource type="PackedScene" uid="uid://bfc6rqccgyicl" path="res://Scenes/wizard.tscn" id="1_jjgbg"]
+[ext_resource type="PackedScene" uid="uid://cqar2i52vrn0e" path="res://Scenes/drop_zone.tscn" id="3_8gbba"]
+[ext_resource type="PackedScene" uid="uid://dg46ynffklloi" path="res://Scenes/code_block.tscn" id="4_kry3j"]
+[ext_resource type="Resource" uid="uid://c8qiepficwrw0" path="res://Resources/Tokens/Keywords/if.tres" id="5_21xkr"]
+[ext_resource type="Resource" uid="uid://dxyjdcdqu13c3" path="res://Resources/Tokens/Blank.tres" id="6_21xkr"]
+[ext_resource type="PackedScene" uid="uid://ds2j5mhtx04nq" path="res://Scenes/block_spawner.tscn" id="7_6bp64"]
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_bo1nx"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_bo1nx")
+
+[node name="Wizard" parent="." instance=ExtResource("1_jjgbg")]
+position = Vector2(676, 238)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+position = Vector2(388, 639)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+shape = SubResource("WorldBoundaryShape2D_bo1nx")
+
+[node name="Drop Zone" parent="." instance=ExtResource("3_8gbba")]
+position = Vector2(986, 324)
+
+[node name="CodeBlock" parent="." instance=ExtResource("4_kry3j")]
+token_data = ExtResource("5_21xkr")
+
+[node name="CodeBlock2" parent="." instance=ExtResource("4_kry3j")]
+position = Vector2(305, 4)
+token_data = ExtResource("6_21xkr")
+
+[node name="BlockSpawner" parent="." instance=ExtResource("7_6bp64")]
+position = Vector2(20, 84)
+token_data = ExtResource("6_21xkr")

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TokenData" load_steps=2 format=3 uid="uid://bow2hs0nmxue8"]
+
+[ext_resource type="Script" uid="uid://cmtcw0yg0prc2" path="res://Scripts/Tokens/TokenData.gd" id="1_28gdu"]
+
+[resource]
+script = ExtResource("1_28gdu")
+display_text = "return"
+code_string = "return"
+block_color = Color(1, 0.54901963, 0.8, 1)
+metadata/_custom_type_script = "uid://cmtcw0yg0prc2"

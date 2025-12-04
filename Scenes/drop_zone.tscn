@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://cqar2i52vrn0e"]
+
+[ext_resource type="Script" uid="uid://bmn7pxdtx82s6" path="res://Scripts/BlockHandling/drop_zone.gd" id="1_tcq6s"]
+[ext_resource type="Script" uid="uid://bglhv0vq7ligy" path="res://Scripts/BlockHandling/structure_spawner.gd" id="2_shdp8"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_shdp8"]
+size = Vector2(320, 640)
+
+[node name="Drop Zone" type="Area2D"]
+script = ExtResource("1_tcq6s")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_shdp8")
+
+[node name="StructureSpawner" type="Node2D" parent="."]
+script = ExtResource("2_shdp8")
