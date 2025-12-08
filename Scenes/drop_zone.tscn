@@ -1,18 +1,26 @@
-[gd_scene load_steps=5 format=3 uid="uid://cqar2i52vrn0e"]
+[gd_scene load_steps=7 format=3 uid="uid://cqar2i52vrn0e"]
 
 [ext_resource type="Script" uid="uid://bmn7pxdtx82s6" path="res://Scripts/BlockHandling/drop_zone.gd" id="1_tcq6s"]
 [ext_resource type="Script" uid="uid://bglhv0vq7ligy" path="res://Scripts/BlockHandling/structure_spawner.gd" id="2_shdp8"]
 [ext_resource type="PackedScene" uid="uid://dx2784bfdu1tj" path="res://Scenes/enter_button.tscn" id="2_vv7pd"]
+[ext_resource type="Script" uid="uid://cqcpyn8cyrv5t" path="res://Scripts/GridHandling/GridShifter.gd" id="4_owibr"]
+[ext_resource type="Script" uid="uid://c6047w060vjv" path="res://Scripts/GridHandling/EnterButtonManager.gd" id="5_xbe6g"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_shdp8"]
 size = Vector2(320, 640)
 
 [node name="Drop Zone" type="Area2D"]
 script = ExtResource("1_tcq6s")
-row_button_scene = ExtResource("2_vv7pd")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_shdp8")
 
 [node name="StructureSpawner" type="Node2D" parent="."]
 script = ExtResource("2_shdp8")
+
+[node name="GridShifter" type="Node2D" parent="."]
+script = ExtResource("4_owibr")
+
+[node name="EnterButtonManager" type="Node2D" parent="."]
+script = ExtResource("5_xbe6g")
+enter_button_scene = ExtResource("2_vv7pd")

@@ -9,11 +9,12 @@ var held_items: Array[Area2D] = []
 var orbit_angle := 0.0
 var player: Node2D = null
 
-#Track which item is selected without moving them
+# Track which item is selected without moving them
 var selected_index: int = 0
-
-#Pause state for the orbit
+# Pause state
 var is_paused: bool = false
+
+const GRID_SIZE = 32
 
 func _process(delta: float) -> void:
 	_update_orbit(delta)
@@ -29,7 +30,6 @@ func add_item(item: Area2D) -> bool:
 		return false
 		
 	held_items.append(item)
-	# Automatically select the new item you just picked up
 	selected_index = held_items.size() - 1
 	orbit_angle = 0.0 
 	return true
@@ -39,27 +39,21 @@ func remove_item(item: Area2D) -> void:
 	if index != -1:
 		held_items.remove_at(index)
 		
-		# Reset visuals when removing
 		item.modulate = Color.WHITE
 		item.scale = Vector2.ONE
 		
-		# Also try to turn off custom highlight if it exists
 		if item.has_method("set_highlight"):
 			item.set_highlight(false)
 		
-		# Adjust selected_index if we removed an item before it
 		if index < selected_index:
 			selected_index -= 1
 		
-		# Clamp index to be safe (if we removed the last item)
 		if selected_index >= held_items.size():
 			selected_index = max(0, held_items.size() - 1)
 
-# Renamed behavior: Returns the SELECTED item, not necessarily the last one
 func get_last_item() -> Area2D:
 	if held_items.is_empty():
 		return null
-	# Safety check
 	if selected_index < 0 or selected_index >= held_items.size():
 		selected_index = 0
 	return held_items[selected_index]
@@ -73,17 +67,14 @@ func has_item(item: Area2D) -> bool:
 func cycle_items(direction: int) -> void:
 	if held_items.size() < 2: return
 	
-	# Just move the pointer, don't move the items!
 	selected_index += direction
 	
-	# Wrap around
 	if selected_index >= held_items.size():
 		selected_index = 0
 	elif selected_index < 0:
 		selected_index = held_items.size() - 1
 
 func _update_orbit(delta: float) -> void:
-	# Clean up invalid items
 	for i in range(held_items.size() - 1, -1, -1):
 		if not is_instance_valid(held_items[i]):
 			held_items.remove_at(i)
@@ -92,11 +83,10 @@ func _update_orbit(delta: float) -> void:
 
 	if held_items.is_empty() or not player:
 		return
-		
-	#Only update angle if not paused
+	
 	if not is_paused:
 		orbit_angle += orbit_speed * delta
-	
+		
 	var a = 70
 	var b = 70
 		
@@ -107,23 +97,26 @@ func _update_orbit(delta: float) -> void:
 			
 			var angle_offset = (2 * PI / max_items) * i
 			var total_angle = orbit_angle + angle_offset
-			var offset = Vector2(cos(total_angle) * a, sin(total_angle) * b)
-			item.global_position = player.global_position + offset
+			var orbit_pos = Vector2(cos(total_angle) * a, sin(total_angle) * b)
 			
-			# --- UPDATED: HIGHLIGHT LOGIC ---
-			# We use 'modulate' (Brightness) which works on every object type immediately
-			# 1.2 is 20% brighter than normal
+			# We calculate the visual center of the item to ensure 
+			# it orbits with the center of the block
+			var center_offset = Vector2(GRID_SIZE / 2.0, GRID_SIZE / 2.0)
+			
+			if item is CodeBlock and item.token_data:
+				var w = item.token_data.width_units * GRID_SIZE
+				center_offset = Vector2(w / 2.0, GRID_SIZE / 2.0)
+			
+			# Apply offset so the center of the block is on the orbit path
+			item.global_position = player.global_position + orbit_pos - center_offset
+			
 			if i == selected_index:
 				item.modulate = Color(1.2, 1.2, 1.2)
-				# Add a tiny scale pop that isn't large enough to blur text
-				
-				
-				# Optional: Still call the custom method if you fixed the CodeBlock script
+				item.scale = Vector2(1.1, 1.1)
 				if item.has_method("set_highlight"):
 					item.set_highlight(true)
 			else:
 				item.modulate = Color.WHITE
 				item.scale = Vector2.ONE
-				
 				if item.has_method("set_highlight"):
 					item.set_highlight(false)
