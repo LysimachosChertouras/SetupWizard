@@ -8,7 +8,7 @@ class_name GridShifter
 
 func shift_rows_down(from_row_index: int, amount: int = 1) -> bool:
 	var size = zone.collision_shape.shape.size
-	var top_left = zone.collision_shape.position - (size / 2)
+	# Removed unused 'top_left' variable here
 	var max_rows = int(size.y / zone.grid_size)
 	
 	# 1. Identify blocks to move

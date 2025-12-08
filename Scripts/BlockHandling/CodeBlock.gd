@@ -8,7 +8,7 @@ class_name CodeBlock
 @onready var background = $Background
 @onready var label = $Label
 @onready var collider = $CollisionShape2D
-@onready var snap_point = $SnapPoint
+# REMOVED: @onready var snap_point = $SnapPoint
 
 # Keep track of structure blocks spawned by this block
 var linked_blocks: Array[Node] = []
@@ -62,12 +62,11 @@ func _apply_size_changes():
 		shape.size = Vector2(width_px, UNIT_SIZE)
 		collider.shape = shape
 		collider.position = Vector2(width_px / 2.0, UNIT_SIZE / 2.0)
-	if snap_point:
-		snap_point.position.x = width_px
+	
+	# REMOVED: snap_point positioning logic
 
 func get_snap_global_position() -> Vector2:
-	if snap_point:
-		return snap_point.global_position
+	# Return local offset for grid logic (usually 1 unit right)
 	return global_position + Vector2(32, 0)
 
 func clear_linked_structure():
@@ -112,12 +111,10 @@ func handle_typing_input(event: InputEventKey):
 
 func _check_syntax_highlighting():
 	var current_word = token_data.code_string
-	var db = get_node_or_null("/root/KeywordDB")
+	var new_color = KeywordDB.get_keyword_color(current_word)
 	
-	if db:
-		var new_color = db.get_keyword_color(current_word)
-		token_data.block_color = new_color
-		label.add_theme_color_override("font_color", new_color)
+	token_data.block_color = new_color
+	label.add_theme_color_override("font_color", new_color)
 
 func _refresh_visuals_from_typing():
 	label.text = token_data.display_text
