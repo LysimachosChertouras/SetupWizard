@@ -6,6 +6,6 @@
 script = ExtResource("1_2uc1r")
 type = 2
 display_text = "{"
-code_string = "}"
+code_string = "{"
 block_color = Color(0.67058825, 0.7882353, 1, 1)
 metadata/_custom_type_script = "uid://cmtcw0yg0prc2"

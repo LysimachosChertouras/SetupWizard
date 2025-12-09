@@ -37,8 +37,6 @@ func _update_ghost_preview() -> void:
 	var drop_data = _get_current_drop_target()
 	
 	if drop_data.is_valid:
-		# Optional: You can also visually turn the ghost red here 
-		# by calling zone.can_accommodate_block() if you want extra polish later
 		ghost_preview.update_preview(drop_data.snapped_pos, item)
 	else:
 		ghost_preview.hide_preview()
@@ -52,7 +50,7 @@ func _drop_item(item: Area2D) -> void:
 		var snapped_pos = drop_data.snapped_pos
 		var zone = drop_data.zone
 		
-		# --- NEW: Bounds Check & Shifting ---
+		# --- Bounds Check & Shifting ---
 		var width_units = 1
 		if item is CodeBlock and item.token_data:
 			width_units = item.token_data.width_units

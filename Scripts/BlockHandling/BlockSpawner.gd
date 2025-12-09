@@ -26,7 +26,7 @@ func _update_visuals():
 		background.size = Vector2(width, 32)
 		background.modulate = Color(0.9, 0.9, 0.9)
 	
-	# NEW: Force the physics shape to match the visual size
+	# Force the physics shape to match the visual size
 	if collider:
 		var shape = collider.shape
 		if not shape:

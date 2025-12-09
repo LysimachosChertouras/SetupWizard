@@ -5,7 +5,7 @@ class_name DropZone
 @export var grid_color := Color(1, 1, 1, 0.3)
 @export var border_color := Color.WHITE
 
-# Drag your EnterButton.tscn here in the Inspector!
+# Drag enter_button.tscn here in the Inspector!
 @export var row_button_scene: PackedScene
 
 @onready var collision_shape = $CollisionShape2D
@@ -17,6 +17,7 @@ func _ready():
 	queue_redraw()
 	call_deferred("_spawn_row_buttons")
 
+# Spawns enter buttons 
 func _spawn_row_buttons():
 	if not row_button_scene or not collision_shape: return
 	
@@ -48,6 +49,7 @@ func _spawn_row_buttons():
 			if shape is RectangleShape2D:
 				shape.size = Vector2(grid_size, grid_size)
 
+# Draws the grid in the Drop Zone
 func _draw():
 	if not collision_shape or not collision_shape.shape: return
 	var size = collision_shape.shape.size
@@ -60,6 +62,7 @@ func _draw():
 	for y in range(0, int(size.y), grid_size):
 		draw_line(top_left + Vector2(0, y), top_left + Vector2(size.x, y), grid_color)
 
+# Checks if the block is a spawner block AKA Blueprint
 func on_item_placed(item: CodeBlock):
 	if not item.token_data: return
 	if spawner:
@@ -74,7 +77,7 @@ func get_snapped_global_position(target_global_pos: Vector2) -> Vector2:
 	var grid_y = floor(shifted_pos.y / grid_size) * grid_size
 	return to_global(Vector2(grid_x, grid_y) + top_left)
 
-# --- DELEGATED FUNCTIONS ---
+# ----------- DELEGATED FUNCTIONS ------------ #
 
 func shift_rows_down(from_row_index: int, amount: int = 1) -> bool:
 	if shifter:

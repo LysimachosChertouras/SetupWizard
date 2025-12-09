@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://bwom6kpk0belt"]
+[gd_scene load_steps=10 format=3 uid="uid://bwom6kpk0belt"]
 
 [ext_resource type="Script" uid="uid://eiom31sjd5e8" path="res://Scripts/Scenes/main.gd" id="1_bo1nx"]
 [ext_resource type="PackedScene" uid="uid://bfc6rqccgyicl" path="res://Scenes/wizard.tscn" id="1_jjgbg"]
@@ -7,6 +7,7 @@
 [ext_resource type="Resource" uid="uid://c8qiepficwrw0" path="res://Resources/Tokens/Keywords/if.tres" id="5_21xkr"]
 [ext_resource type="Resource" uid="uid://dxyjdcdqu13c3" path="res://Resources/Tokens/Blank.tres" id="6_21xkr"]
 [ext_resource type="PackedScene" uid="uid://ds2j5mhtx04nq" path="res://Scenes/block_spawner.tscn" id="7_6bp64"]
+[ext_resource type="Script" uid="uid://b2htbsucieuwl" path="res://Scripts/Compiler/GridCompiler.gd" id="8_344ge"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_bo1nx"]
 
@@ -35,3 +36,7 @@ token_data = ExtResource("6_21xkr")
 [node name="BlockSpawner" parent="." instance=ExtResource("7_6bp64")]
 position = Vector2(20, 84)
 token_data = ExtResource("6_21xkr")
+
+[node name="Compiler" type="Node2D" parent="." node_paths=PackedStringArray("target_zone")]
+script = ExtResource("8_344ge")
+target_zone = NodePath("../Drop Zone")

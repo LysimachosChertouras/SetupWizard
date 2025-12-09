@@ -1,14 +1,13 @@
 extends Area2D
 class_name CodeBlock
 
-# EXPORT THIS so you can set it in the Inspector!
+# EXPORT so you can set it in the Inspector!
 @export var token_data: TokenData
 
 # Components
 @onready var background = $Background
 @onready var label = $Label
 @onready var collider = $CollisionShape2D
-# REMOVED: @onready var snap_point = $SnapPoint
 
 # Keep track of structure blocks spawned by this block
 var linked_blocks: Array[Node] = []
@@ -49,6 +48,7 @@ func setup(data: TokenData):
 		background.modulate = Color.WHITE
 		_apply_size_changes()
 
+# Calculates the size of the blocks
 func _apply_size_changes():
 	if not token_data: return
 	var width_px = token_data.width_units * UNIT_SIZE
@@ -63,23 +63,25 @@ func _apply_size_changes():
 		collider.shape = shape
 		collider.position = Vector2(width_px / 2.0, UNIT_SIZE / 2.0)
 	
-	# REMOVED: snap_point positioning logic
 
 func get_snap_global_position() -> Vector2:
 	# Return local offset for grid logic (usually 1 unit right)
 	return global_position + Vector2(32, 0)
 
+# Clears the struct when the origin block is picked up
 func clear_linked_structure():
 	for block in linked_blocks:
 		if is_instance_valid(block):
 			block.queue_free()
 	linked_blocks.clear()
 
+# Toggles the highlight
 func set_highlight(active: bool):
 	if highlight_overlay:
 		highlight_overlay.visible = active
 
-# --- TYPING LOGIC ---
+# --------------- TYPING LOGIC --------------- #
+# Chameleon block
 func handle_typing_input(event: InputEventKey):
 	if not token_data or not token_data.is_writable: return
 
@@ -109,6 +111,7 @@ func handle_typing_input(event: InputEventKey):
 		_check_syntax_highlighting()
 		_refresh_visuals_from_typing()
 
+# If the word exists its going to change the colour from a known list (KeywordDB)
 func _check_syntax_highlighting():
 	var current_word = token_data.code_string
 	var new_color = KeywordDB.get_keyword_color(current_word)
@@ -116,6 +119,7 @@ func _check_syntax_highlighting():
 	token_data.block_color = new_color
 	label.add_theme_color_override("font_color", new_color)
 
+# Rechecks the size of the block after typing
 func _refresh_visuals_from_typing():
 	label.text = token_data.display_text
 	

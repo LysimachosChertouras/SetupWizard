@@ -1,7 +1,7 @@
 extends Node
 class_name EnterButtonManager
 
-# Assign your EnterButton.tscn here in the Inspector
+# Assign enter_button.tscn here in the Inspector
 @export var enter_button_scene: PackedScene
 
 @onready var zone: DropZone = get_parent()
@@ -26,7 +26,7 @@ func _spawn_buttons():
 		btn.position = btn_pos
 		btn.setup(zone, i)
 		
-		# --- FIX 1: Auto-Resize Logic ---
+		# --- Auto-Resize Logic ---
 		# Only scale the SPRITE, not the root node. 
 		# This ensures the CollisionShape stays at exactly 1.0 scale.
 		var sprite = btn.get_node_or_null("Sprite2D")

@@ -15,12 +15,13 @@ func setup(zone: DropZone, row: int):
 	if label:
 		label.text = str(row_index + 1)
 
+# When pressed
 func _on_input_event(_viewport, event, _shape_idx):
 	if event.is_action_pressed("Primary Action"):
 		if parent_zone:
 			parent_zone.shift_rows_down(row_index)
 			
-			# --- FIX: Safe Animation ---
+			# --- Safe Animation ---
 			var visual_node = get_node_or_null("Sprite2D")
 			if visual_node:
 				# 1. Capture the correct size the first time we click
