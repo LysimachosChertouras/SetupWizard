@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://cjf18k0ntfnqf"]
+
+[ext_resource type="Script" uid="uid://b2htbsucieuwl" path="res://Scripts/Compiler/GridScanner.gd" id="1_3phhr"]
+[ext_resource type="Script" uid="uid://dv061nvqun4ep" path="res://Scripts/Compiler/CodeInterpreter.gd" id="2_huebj"]
+
+[node name="Compiler" type="Node2D"]
+
+[node name="Scanner" type="Node2D" parent="." node_paths=PackedStringArray("interpreter")]
+script = ExtResource("1_3phhr")
+interpreter = NodePath("../Interpreter")
+
+[node name="Interpreter" type="Node2D" parent="."]
+script = ExtResource("2_huebj")

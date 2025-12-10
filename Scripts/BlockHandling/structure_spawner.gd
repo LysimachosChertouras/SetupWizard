@@ -25,9 +25,9 @@ const BLOCK_SCENE = preload("res://Scenes/code_block.tscn")
 	
 	# WHILE: Same shape as IF
 	"while": [
-		{ "x": 1, "y": 0, "token": "ParenOpen" },
-		{ "x": 3, "y": 0, "token": "ParenClose" }, 
-		{ "x": 4, "y": 0, "token": "BraceOpen" },
+		{ "x": 2, "y": 0, "token": "ParenOpen" },
+		{ "x": 5, "y": 0, "token": "ParenClose" }, 
+		{ "x": 6, "y": 0, "token": "BraceOpen" },
 		{ "x": 0, "y": 2, "token": "BraceClose" }
 	],
 	

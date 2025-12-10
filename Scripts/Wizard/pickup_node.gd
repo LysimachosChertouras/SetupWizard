@@ -1,5 +1,8 @@
 extends Node2D
 
+# Assign Symbol_Semicolon.tres here in the Inspector!
+@export var quick_place_token: TokenData
+
 @onready var pickup_area: Area2D = $"../PickupArea"
 
 var nearby_items: Array[Area2D] = []
@@ -29,14 +32,39 @@ func init(p: Node2D) -> void:
 	pickup_area.area_exited.connect(_on_area_exited)
 
 func _unhandled_input(event: InputEvent) -> void:
+	# 1. Scroll Wheel (Cycling Inventory)
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			inventory.cycle_items(1)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			inventory.cycle_items(-1)
+		
+		# --- NEW: Middle Click to Place Semicolon ---
+		elif event.button_index == MOUSE_BUTTON_MIDDLE:
+			if quick_place_token and placement_controller:
+				placement_controller.quick_place_token(quick_place_token)
 	
+	# 2. Keyboard (Typing into Blocks & Deletion)
 	if event is InputEventKey and event.pressed:
 		var active_item = inventory.get_last_item()
+		
+		# --- NEW: Delete Key to Destroy Block ---
+		if event.keycode == KEY_DELETE and active_item:
+			# If we were typing in this block, stop typing mode
+			if typing_focus_active:
+				typing_focus_active = false
+				inventory.set_paused(false)
+			
+			# Safety cleanup
+			if active_item is CodeBlock:
+				active_item.clear_linked_structure()
+			
+			# Remove from inventory and destroy it
+			inventory.remove_item(active_item)
+			active_item.queue_free()
+			
+			get_viewport().set_input_as_handled()
+			return
 		
 		if active_item and active_item is CodeBlock and active_item.token_data and active_item.token_data.is_writable:
 			if event.keycode == KEY_ENTER:
@@ -74,26 +102,20 @@ func try_pick_up_nearby_item() -> bool:
 	)
 			
 	if target_item:
-		# --- SPAWNER LOGIC ---
 		var item_to_pickup = target_item
 		var is_spawner = target_item.has_method("spawn_copy")
 		
 		if is_spawner:
-			# Create a clone to put in inventory
 			item_to_pickup = target_item.spawn_copy()
-			# Must add to scene before adding to inventory so _ready runs
 			player.get_parent().add_child(item_to_pickup)
 		
 		if inventory.add_item(item_to_pickup):
-			# If we picked up a blank block, start typing
 			if item_to_pickup is CodeBlock:
 				item_to_pickup.clear_linked_structure()
 				if item_to_pickup.token_data and item_to_pickup.token_data.is_writable:
 					typing_focus_active = true
 					inventory.set_paused(true)
 			
-			# If it was a normal item, remove it from the ground
-			# If it was a spawner, leave the original there!
 			if not is_spawner:
 				nearby_items.erase(target_item)
 				if target_item.has_node("CollisionShape2D"):
@@ -101,7 +123,6 @@ func try_pick_up_nearby_item() -> bool:
 			
 			return true
 		else:
-			# Inventory Full: If we made a clone, delete it so it doesn't clutter the world
 			if is_spawner:
 				item_to_pickup.queue_free()
 			

@@ -5,51 +5,18 @@ class_name DropZone
 @export var grid_color := Color(1, 1, 1, 0.3)
 @export var border_color := Color.WHITE
 
-# Drag enter_button.tscn here in the Inspector!
+# Drag your EnterButton.tscn here in the Inspector!
 @export var row_button_scene: PackedScene
 
 @onready var collision_shape = $CollisionShape2D
 @onready var spawner: StructureSpawner = $StructureSpawner
 @onready var shifter: GridShifter = $GridShifter
+@onready var button_manager: EnterButtonManager = $EnterButtonManager
 
 func _ready():
 	add_to_group("drop_zones")
 	queue_redraw()
-	call_deferred("_spawn_row_buttons")
 
-# Spawns enter buttons 
-func _spawn_row_buttons():
-	if not row_button_scene or not collision_shape: return
-	
-	var size = collision_shape.shape.size
-	var top_left = collision_shape.position - (size / 2)
-	var rows_count = int(size.y / grid_size)
-	
-	for i in range(rows_count):
-		var btn = row_button_scene.instantiate()
-		add_child(btn)
-		
-		var btn_pos = top_left + Vector2(-grid_size, i * grid_size) + Vector2(grid_size/2.0, grid_size/2.0)
-		
-		btn.position = btn_pos
-		btn.setup(self, i)
-		
-		var sprite = btn.get_node_or_null("Sprite2D")
-		if sprite and sprite.texture:
-			var texture_size = sprite.texture.get_size()
-			if texture_size.x > 0 and texture_size.y > 0:
-				btn.scale = Vector2(grid_size, grid_size) / texture_size
-		
-		var collider = btn.get_node_or_null("CollisionShape2D")
-		if collider:
-			var shape = collider.shape
-			if not shape:
-				shape = RectangleShape2D.new()
-				collider.shape = shape
-			if shape is RectangleShape2D:
-				shape.size = Vector2(grid_size, grid_size)
-
-# Draws the grid in the Drop Zone
 func _draw():
 	if not collision_shape or not collision_shape.shape: return
 	var size = collision_shape.shape.size
@@ -62,26 +29,41 @@ func _draw():
 	for y in range(0, int(size.y), grid_size):
 		draw_line(top_left + Vector2(0, y), top_left + Vector2(size.x, y), grid_color)
 
-# Checks if the block is a spawner block AKA Blueprint
 func on_item_placed(item: CodeBlock):
 	if not item.token_data: return
 	if spawner:
 		spawner.try_spawn(item.token_data.code_string, item, grid_size, get_parent(), self)
 
-func get_snapped_global_position(target_global_pos: Vector2) -> Vector2:
+func get_snapped_global_position(target_global_pos: Vector2, item: Area2D = null) -> Vector2:
 	var local_pos = to_local(target_global_pos)
 	var size = collision_shape.shape.size
 	var top_left = collision_shape.position - (size / 2)
 	var shifted_pos = local_pos - top_left
-	var grid_x = floor(shifted_pos.x / grid_size) * grid_size
+	
 	var grid_y = floor(shifted_pos.y / grid_size) * grid_size
+	
+	# Calculate Base X
+	var grid_x = floor(shifted_pos.x / grid_size) * grid_size
+	
+	# --- APPLY INDENTATION FORCE ---
+	# Ask the shifter how far right we should be based on open brackets above us
+	if shifter and item:
+		var row_index = int(floor(shifted_pos.y / grid_size))
+		# Check has_method to prevent crashes if GridShifter isn't updated yet
+		if shifter.has_method("get_indent_x"):
+			var indent_x = shifter.get_indent_x(row_index, item)
+			# Force X to be at least this indent level
+			if grid_x < indent_x:
+				grid_x = indent_x
+	
 	return to_global(Vector2(grid_x, grid_y) + top_left)
 
-# ----------- DELEGATED FUNCTIONS ------------ #
+# --- DELEGATED FUNCTIONS ---
 
-func shift_rows_down(from_row_index: int, amount: int = 1) -> bool:
+# Updated signature to accept ignore_item
+func shift_rows_down(from_row_index: int, amount: int = 1, ignore_item: Area2D = null) -> bool:
 	if shifter:
-		return shifter.shift_rows_down(from_row_index, amount)
+		return shifter.shift_rows_down(from_row_index, amount, ignore_item)
 	return false
 
 func can_accommodate_block(global_pos: Vector2, width_units: int, ignore_item: Area2D) -> bool:
