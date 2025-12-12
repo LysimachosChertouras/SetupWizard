@@ -41,18 +41,13 @@ func get_snapped_global_position(target_global_pos: Vector2, item: Area2D = null
 	var shifted_pos = local_pos - top_left
 	
 	var grid_y = floor(shifted_pos.y / grid_size) * grid_size
-	
-	# Calculate Base X
 	var grid_x = floor(shifted_pos.x / grid_size) * grid_size
 	
 	# --- APPLY INDENTATION FORCE ---
-	# Ask the shifter how far right we should be based on open brackets above us
 	if shifter and item:
 		var row_index = int(floor(shifted_pos.y / grid_size))
-		# Check has_method to prevent crashes if GridShifter isn't updated yet
 		if shifter.has_method("get_indent_x"):
 			var indent_x = shifter.get_indent_x(row_index, item)
-			# Force X to be at least this indent level
 			if grid_x < indent_x:
 				grid_x = indent_x
 	
@@ -60,10 +55,15 @@ func get_snapped_global_position(target_global_pos: Vector2, item: Area2D = null
 
 # --- DELEGATED FUNCTIONS ---
 
-# Updated signature to accept ignore_item
 func shift_rows_down(from_row_index: int, amount: int = 1, ignore_item: Area2D = null) -> bool:
 	if shifter:
 		return shifter.shift_rows_down(from_row_index, amount, ignore_item)
+	return false
+
+# NEW: Vertical Shift Up
+func shift_rows_up(from_row_index: int, amount: int = 1, ignore_item: Area2D = null) -> bool:
+	if shifter:
+		return shifter.shift_rows_up(from_row_index, amount, ignore_item)
 	return false
 
 func can_accommodate_block(global_pos: Vector2, width_units: int, ignore_item: Area2D) -> bool:

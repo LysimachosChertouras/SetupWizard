@@ -6,7 +6,7 @@ class_name GridShifter
 
 # --- PUBLIC API ---
 
-# NEW: Calculates indentation relative to the parent block's line start
+# Calculates indentation relative to the parent block's line start
 func get_indent_x(target_row_index: int, item: Area2D) -> float:
 	var top_left = zone.collision_shape.position - (zone.collision_shape.shape.size / 2)
 	
@@ -25,7 +25,6 @@ func get_indent_x(target_row_index: int, item: Area2D) -> float:
 		all_blocks.append(block)
 
 	# 2. Sort blocks to read backwards (Bottom-Up, Right-to-Left)
-	# This ensures we find the 'closest' opening bracket correctly, even with nested code
 	all_blocks.sort_custom(func(a, b):
 		var a_pos = zone.to_local(a.global_position)
 		var b_pos = zone.to_local(b.global_position)
@@ -33,11 +32,11 @@ func get_indent_x(target_row_index: int, item: Area2D) -> float:
 		var b_row = round(b_pos.y / zone.grid_size)
 		
 		if a_row != b_row:
-			return a_row > b_row # Descending Row
+			return a_row > b_row 
 		
 		var a_col = round(a_pos.x / zone.grid_size)
 		var b_col = round(b_pos.x / zone.grid_size)
-		return a_col > b_col # Descending Col
+		return a_col > b_col 
 	)
 
 	# 3. Find the Parent Scope
@@ -48,30 +47,22 @@ func get_indent_x(target_row_index: int, item: Area2D) -> float:
 		var block_pos = zone.to_local(block.global_position) - top_left
 		var row = int(round(block_pos.y / zone.grid_size))
 		
-		# Only look above the target
 		if row < target_row_index:
 			if block.token_data:
 				var code = block.token_data.code_string
-				
-				# Check Closing '}' first (push to stack)
 				if "}" in code:
 					bracket_stack += 1
-				
-				# Check Opening '{'
 				if "{" in code:
 					if bracket_stack > 0:
-						# This '{' closes a '}' we found lower down. Consume it.
 						bracket_stack -= 1
 					else:
-						# Found it! This is the unmatched '{' that opens our scope.
 						parent_row_index = row
-						break # Stop scanning
+						break 
 	
 	# 4. Calculate Indentation based on Parent Row
 	var indent_col = 0.0
 	
 	if parent_row_index != -1:
-		# Find the start (min_x) of the parent row
 		var min_col = 99999
 		for block in all_blocks:
 			var block_pos = zone.to_local(block.global_position) - top_left
@@ -83,10 +74,8 @@ func get_indent_x(target_row_index: int, item: Area2D) -> float:
 					min_col = col
 		
 		if min_col != 99999:
-			# Indent is 1 unit to the right of the parent line's start
 			indent_col = min_col + 1
 
-	# 5. Dedent if placing a closing bracket
 	if item is CodeBlock and item.token_data:
 		if "}" in item.token_data.code_string:
 			indent_col -= 1
@@ -99,20 +88,56 @@ func shift_rows_down(from_row_index: int, amount: int = 1, ignore_item: Area2D =
 	var size = zone.collision_shape.shape.size
 	var max_rows = int(size.y / zone.grid_size)
 	
+	# 1. Identify blocks to move
 	var blocks_to_shift = _get_blocks_below_row(from_row_index, ignore_item)
 
 	if blocks_to_shift.is_empty():
 		return true
 
+	# 2. Check Bounds
 	for b in blocks_to_shift:
 		if b.row + amount >= max_rows:
 			print("Cannot shift rows: Block would fall out of bounds.")
 			return false
 
+	# 3. Apply Shift
 	for b in blocks_to_shift:
 		var block = b.node
 		var tween = create_tween()
 		tween.tween_property(block, "global_position", block.global_position + Vector2(0, zone.grid_size * amount), 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		
+	return true
+
+# --- NEW: Shift Rows Up ---
+func shift_rows_up(from_row_index: int, amount: int = 1, ignore_item: Area2D = null) -> bool:
+	# 1. Identify blocks to move (from the row BELOW the button, moving UP)
+	var blocks_to_shift = _get_blocks_below_row(from_row_index + 1, ignore_item)
+
+	if blocks_to_shift.is_empty():
+		return true
+
+	# 2. Check Bounds (Don't push off the top)
+	for b in blocks_to_shift:
+		if b.row - amount < 0:
+			print("Cannot shift rows up: Block would fall out of bounds (Top).")
+			return false
+	
+	# 3. Check Collision (Don't overwrite existing blocks)
+	# We are moving blocks INTO the rows starting at [from_row_index].
+	# We need to check if the destination rows [from_row_index, from_row_index - amount + 1] are occupied.
+	# For amount=1, we check if 'from_row_index' is occupied.
+	var check_start_row = from_row_index - amount + 1
+	var check_end_row = from_row_index
+	
+	if _is_range_occupied(check_start_row, check_end_row, ignore_item):
+		print("Cannot shift rows up: Destination row is occupied.")
+		return false
+			
+	# 4. Apply Shift
+	for b in blocks_to_shift:
+		var block = b.node
+		var tween = create_tween()
+		tween.tween_property(block, "global_position", block.global_position - Vector2(0, zone.grid_size * amount), 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		
 	return true
 
@@ -130,9 +155,11 @@ func can_accommodate_block(global_pos: Vector2, width_units: int, ignore_item: A
 	var drop_start_x = floor(shifted_pos.x / zone.grid_size) * zone.grid_size
 	var drop_end_x = drop_start_x + (width_units * zone.grid_size)
 	
+	# 1. Check Horizontal Bounds
 	if drop_end_x > max_x_width:
 		return false
 
+	# 2. Check Vertical Bounds (Structure Insert)
 	if zone.spawner and ignore_item is CodeBlock and ignore_item.token_data:
 		var code = ignore_item.token_data.code_string
 		if code in zone.spawner.structures:
@@ -235,6 +262,8 @@ func _get_blocks_below_row(from_row_index: int, ignore_item: Area2D = null) -> A
 	var size = zone.collision_shape.shape.size
 	var top_left = zone.collision_shape.position - (size / 2)
 	var max_rows = int(size.y / zone.grid_size)
+	# FIX 2: Check horizontal bounds too
+	var max_cols = int(size.x / zone.grid_size)
 	var blocks = []
 	
 	var all_blocks = get_tree().get_nodes_in_group("pickup_items")
@@ -248,15 +277,20 @@ func _get_blocks_below_row(from_row_index: int, ignore_item: Area2D = null) -> A
 		
 		var block_local = zone.to_local(block.global_position) - top_left
 		var row = round(block_local.y / zone.grid_size)
+		var col = round(block_local.x / zone.grid_size)
 		
-		if row >= 0 and row < max_rows:
+		# FIX 2: Strict bounds check for Row AND Column
+		if col >= 0 and col < max_cols and row >= 0 and row < max_rows:
 			if row >= from_row_index:
 				blocks.append({"node": block, "row": int(row)})
 	return blocks
 
 func _get_horizontal_shift_blocks(drop_row_y: float, drop_start_x: float, ignore_item: Area2D) -> Array:
 	var blocks = []
+	var size = zone.collision_shape.shape.size
 	var top_left = zone.collision_shape.position - (zone.collision_shape.shape.size / 2)
+	var max_cols = int(size.x / zone.grid_size) 
+	
 	var all_blocks = get_tree().get_nodes_in_group("pickup_items")
 	
 	for block in all_blocks:
@@ -270,6 +304,9 @@ func _get_horizontal_shift_blocks(drop_row_y: float, drop_start_x: float, ignore
 		var block_local = zone.to_local(block.global_position) - top_left
 		var block_y = floor(block_local.y / zone.grid_size) * zone.grid_size
 		var block_x = floor(block_local.x / zone.grid_size) * zone.grid_size
+		var col = round(block_local.x / zone.grid_size)
+		
+		if col < 0 or col >= max_cols: continue
 		
 		if is_equal_approx(block_y, drop_row_y) and block_x >= drop_start_x:
 			var block_w = 1
@@ -280,3 +317,30 @@ func _get_horizontal_shift_blocks(drop_row_y: float, drop_start_x: float, ignore
 				"end_x": block_x + (block_w * zone.grid_size)
 			})
 	return blocks
+
+# NEW: Checks if any blocks exist in the given row range
+func _is_range_occupied(start_row: int, end_row: int, ignore_item: Area2D = null) -> bool:
+	var size = zone.collision_shape.shape.size
+	var top_left = zone.collision_shape.position - (size / 2)
+	var max_cols = int(size.x / zone.grid_size)
+	
+	var all_blocks = get_tree().get_nodes_in_group("pickup_items")
+	for block in all_blocks:
+		if block == ignore_item: continue
+		if not block is CodeBlock: continue
+		
+		if block.has_node("CollisionShape2D"):
+			if block.get_node("CollisionShape2D").disabled:
+				continue
+		
+		var block_local = zone.to_local(block.global_position) - top_left
+		var row = round(block_local.y / zone.grid_size)
+		var col = round(block_local.x / zone.grid_size)
+		
+		# Check if inside grid horizontally
+		if col >= 0 and col < max_cols:
+			# Check row range
+			if row >= start_row and row <= end_row:
+				return true
+				
+	return false

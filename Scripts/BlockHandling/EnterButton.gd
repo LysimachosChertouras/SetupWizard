@@ -15,27 +15,30 @@ func setup(zone: DropZone, row: int):
 	if label:
 		label.text = str(row_index + 1)
 
-# When pressed
 func _on_input_event(_viewport, event, _shape_idx):
+	if not parent_zone: return
+	
+	# Primary: Move Down
 	if event.is_action_pressed("Primary Action"):
-		if parent_zone:
-			parent_zone.shift_rows_down(row_index)
-			
-			# --- Safe Animation ---
-			var visual_node = get_node_or_null("Sprite2D")
-			if visual_node:
-				# 1. Capture the correct size the first time we click
-				if _base_scale == Vector2.ZERO:
-					_base_scale = visual_node.scale
-				
-				# 2. Stop any running animation so they don't stack
-				if _tween:
-					_tween.kill()
-				
-				# 3. Reset to the correct size immediately
-				visual_node.scale = _base_scale
-				
-				# 4. Animate relative to the base scale
-				_tween = create_tween()
-				_tween.tween_property(visual_node, "scale", _base_scale * 0.8, 0.1)
-				_tween.tween_property(visual_node, "scale", _base_scale, 0.1)
+		parent_zone.shift_rows_down(row_index)
+		_play_animation()
+		
+	# Secondary: Move Up
+	elif event.is_action_pressed("Secondary Action"):
+		parent_zone.shift_rows_up(row_index)
+		_play_animation()
+
+func _play_animation():
+	var visual_node = get_node_or_null("Sprite2D")
+	if visual_node:
+		if _base_scale == Vector2.ZERO:
+			_base_scale = visual_node.scale
+		
+		if _tween:
+			_tween.kill()
+		
+		visual_node.scale = _base_scale
+		
+		_tween = create_tween()
+		_tween.tween_property(visual_node, "scale", _base_scale * 0.8, 0.1)
+		_tween.tween_property(visual_node, "scale", _base_scale, 0.1)

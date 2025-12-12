@@ -4,53 +4,56 @@ class_name StructureSpawner
 const BLOCK_SCENE = preload("res://Scenes/code_block.tscn")
 
 # --- TOKEN REGISTRY (Exported) ---
-# Maps Short Names -> File Paths
 @export var token_registry: Dictionary = {
 	"ParenOpen": "res://Resources/Tokens/Symbols/ParenOpen.tres",
 	"ParenClose": "res://Resources/Tokens/Symbols/ParenClose.tres",
 	"BraceOpen": "res://Resources/Tokens/Symbols/BraceOpen.tres",
-	"BraceClose": "res://Resources/Tokens/Symbols/BraceClose.tres"
+	"BraceClose": "res://Resources/Tokens/Symbols/BraceClose.tres",
+	"Colon": "res://Resources/Tokens/Symbols/Colon.tres"
 }
 
 # --- BLUEPRINTS (Exported) ---
-# Format: { "x": Grid Offset, "y": Grid Offset, "token": Registry Key }
 @export var structures: Dictionary = {
-	# IF: Standard check
 	"if": [
 		{ "x": 1, "y": 0, "token": "ParenOpen" },
-		{ "x": 3, "y": 0, "token": "ParenClose" }, # Gap of 1 (at x=2)
+		{ "x": 3, "y": 0, "token": "ParenClose" }, 
 		{ "x": 4, "y": 0, "token": "BraceOpen" },
 		{ "x": 0, "y": 2, "token": "BraceClose" }
 	],
-	
-	# WHILE: Same shape as IF
 	"while": [
 		{ "x": 2, "y": 0, "token": "ParenOpen" },
 		{ "x": 5, "y": 0, "token": "ParenClose" }, 
 		{ "x": 6, "y": 0, "token": "BraceOpen" },
 		{ "x": 0, "y": 2, "token": "BraceClose" }
 	],
-	
-	# FOR: Needs a much wider gap for iterators
 	"for": [
 		{ "x": 1, "y": 0, "token": "ParenOpen" },
-		{ "x": 6, "y": 0, "token": "ParenClose" }, # Gap of 4 (x=2,3,4,5)
+		{ "x": 6, "y": 0, "token": "ParenClose" },
 		{ "x": 7, "y": 0, "token": "BraceOpen" },
 		{ "x": 0, "y": 2, "token": "BraceClose" }
 	],
-	
-	# ELSE: No parentheses, just braces
 	"else": [
 		{ "x": 1, "y": 0, "token": "BraceOpen" },
 		{ "x": 0, "y": 2, "token": "BraceClose" }
 	],
-	
-	# FUNC: Standard function definition
 	"func": [
 		{ "x": 1, "y": 0, "token": "ParenOpen" },
 		{ "x": 3, "y": 0, "token": "ParenClose" },
 		{ "x": 4, "y": 0, "token": "BraceOpen" },
 		{ "x": 0, "y": 2, "token": "BraceClose" }
+	],
+
+	"switch": [
+		{ "x": 2, "y": 0, "token": "ParenOpen" },
+		{ "x": 4, "y": 0, "token": "ParenClose" },
+		{ "x": 5, "y": 0, "token": "BraceOpen" },
+		{ "x": 0, "y": 3, "token": "BraceClose" } # Slightly taller default
+	],
+	"case": [
+		{ "x": 2, "y": 0, "token": "Colon" } # Gap of 1 for value
+	],
+	"default": [
+		{ "x": 2, "y": 0, "token": "Colon" }
 	]
 }
 
@@ -68,6 +71,7 @@ func try_spawn(code_string: String, root_block: CodeBlock, grid_size: int, world
 func _check_bounds(blueprint: Array, root_pos: Vector2, grid_size: int, zone: DropZone) -> bool:
 	var shape = zone.get_node("CollisionShape2D")
 	var size = shape.shape.size
+	# Zone origin is center, so calculate top-left and bottom-right
 	var zone_top_left = shape.global_position - (size / 2)
 	var zone_bottom_right = shape.global_position + (size / 2)
 	

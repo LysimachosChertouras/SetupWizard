@@ -8,12 +8,19 @@ const COLOR_SYMBOL = Color("abc9ff") #  Sky Blue ({, (, =, <,)
 
 # The Dictionary
 var registry = {
+	# Control Flow
 	"if": COLOR_CONTROL,
 	"else": COLOR_CONTROL,
 	"for": COLOR_CONTROL,
 	"while": COLOR_CONTROL,
 	"return": COLOR_CONTROL,
+	"switch": COLOR_CONTROL,
+	"case": COLOR_CONTROL,
+	"default": COLOR_CONTROL,
+	"break": COLOR_CONTROL,
+	"continue": COLOR_CONTROL,
 	
+	# Types & Defs
 	"int": COLOR_TYPE,
 	"bool": COLOR_TYPE,
 	"string": COLOR_TYPE,
