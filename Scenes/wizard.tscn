@@ -1,10 +1,11 @@
-[gd_scene load_steps=11 format=3 uid="uid://bfc6rqccgyicl"]
+[gd_scene load_steps=12 format=3 uid="uid://bfc6rqccgyicl"]
 
 [ext_resource type="Texture2D" uid="uid://coe8iqxd56j4e" path="res://Assets/Wizard/Wizard_Anim.png" id="1_byqed"]
 [ext_resource type="Script" uid="uid://c76abg7dxo0hy" path="res://Scripts/Wizard/Wizard_main.gd" id="1_mqqw1"]
 [ext_resource type="Script" uid="uid://b0tfx3bfaq720" path="res://Scripts/Wizard/movement_node.gd" id="2_ilitf"]
 [ext_resource type="Script" uid="uid://bqcarartcn1tt" path="res://Scripts/Wizard/pickup_node.gd" id="3_be21u"]
 [ext_resource type="Resource" uid="uid://xnqvyfjfwb13" path="res://Resources/Tokens/Symbols/Semicolon.tres" id="4_be21u"]
+[ext_resource type="Script" uid="uid://bjrrcay3kca8c" path="res://Scripts/Wizard/PlayerCamera.gd" id="6_sask2"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ilitf"]
 radius = 16.03122
@@ -57,3 +58,6 @@ quick_place_token = ExtResource("4_be21u")
 
 [node name="MovementNode" type="Node2D" parent="."]
 script = ExtResource("2_ilitf")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+script = ExtResource("6_sask2")

@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://dx2784bfdu1tj"]
 
 [ext_resource type="Script" uid="uid://dqqgjgeu3b7s4" path="res://Scripts/BlockHandling/EnterButton.gd" id="1_k71j6"]
-[ext_resource type="Texture2D" uid="uid://bujnowf72iajg" path="res://icon.svg" id="2_rx0bq"]
+[ext_resource type="Texture2D" uid="uid://cqogby1rg8mm" path="res://Assets/CodeBlocks/Elevator.png" id="2_rx0bq"]
 
 [node name="EnterButton" type="Area2D"]
 script = ExtResource("1_k71j6")
@@ -9,6 +9,7 @@ script = ExtResource("1_k71j6")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(-3, 0)
 texture = ExtResource("2_rx0bq")
 
 [connection signal="input_event" from="." to="." method="_on_input_event"]

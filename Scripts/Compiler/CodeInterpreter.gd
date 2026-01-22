@@ -3,6 +3,8 @@ class_name CodeInterpreter
 
 signal log_message(text: String)
 signal error_occurred(message: String)
+# Signal to tell the game to do something (e.g. move, unlock)
+signal action_triggered(function_name: String, args: Array)
 
 var memory: Dictionary = {}
 var tokens: Array[String] = []
@@ -14,8 +16,9 @@ var last_if_result: bool = false
 
 var expression_module = Expression.new()
 
-# Added '[' and ']' to delimiters
-const DELIMITERS = [" ", ";", "{", "}", "(", ")", "[", "]", ",", "=", "+", "-", "*", "/", "<", ">", ":"]
+# Multi-character operators that must stay together
+const MULTI_DELIMS = ["<=", ">=", "==", "!=", "&&", "||", "++", "--", "+=", "-="]
+const DELIMITERS = [" ", ";", "{", "}", "(", ")", "[", "]", ",", "=", "+", "-", "*", "/", "<", ">", ":", "!"]
 
 func run_code(raw_code: String):
 	print("--- INTERPRETER START ---")
@@ -65,11 +68,9 @@ func execute_next_instruction():
 		# Variable logic
 		if peek(1) == "=":
 			handle_assignment()
-		elif peek(1) == "[" and peek(2) != "=": # Array assignment check arr[0] = ...
-			# We need to scan ahead to see if this is an assignment or just an expression start (which shouldn't be here on its own)
-			# Assuming statement starts with var, it's assignment: arr[i] = val;
+		elif peek(1) == "[" and peek(2) != "=":
 			handle_array_assignment()
-		elif peek(1) == "+" and peek(2) == "+":
+		elif peek(1) == "++" or (peek(1) == "+" and peek(2) == "+"):
 			handle_increment()
 		else:
 			current_index += 1
@@ -77,62 +78,88 @@ func execute_next_instruction():
 		if token == "}": handle_block_end()
 		else: current_index += 1
 	else:
+		# Check for Function Call: name ( ... )
 		if peek(1) == "(":
-			current_index += 1
+			handle_function_call()
 		else:
 			print("Unknown token: ", token)
 			current_index += 1
 
+# --- FUNCTION CALLS ---
+
+func handle_function_call():
+	var func_name = tokens[current_index]
+	current_index += 2 # Skip name and '('
+	
+	var args = []
+	
+	if tokens[current_index] == ")":
+		current_index += 1
+	else:
+		while current_index < tokens.size():
+			var arg_end = _find_argument_end()
+			var arg_str = get_tokens_as_string(current_index, arg_end)
+			var val = evaluate_expression(arg_str)
+			args.append(val)
+			current_index = arg_end
+			
+			if tokens[current_index] == ")":
+				current_index += 1
+				break
+			elif tokens[current_index] == ",":
+				current_index += 1
+	
+	if current_index < tokens.size() and tokens[current_index] == ";":
+		current_index += 1
+		
+	print("-> CALL: ", func_name, " Args: ", args)
+	
+	if func_name == "print":
+		print("GAME OUTPUT: ", args)
+		emit_signal("log_message", str(args))
+	else:
+		emit_signal("action_triggered", func_name, args)
+
+func _find_argument_end() -> int:
+	var depth = 0
+	for i in range(current_index, tokens.size()):
+		if tokens[i] == "(": depth += 1
+		elif tokens[i] == ")":
+			if depth == 0: return i
+			depth -= 1
+		elif tokens[i] == ",":
+			if depth == 0: return i
+	return tokens.size()
+
 # --- ARRAY LOGIC ---
 
 func handle_array_assignment():
-	# Format: name [ index ] = value ;
 	var var_name = tokens[current_index]
-	current_index += 2 # Skip name and '['
+	current_index += 2
 	
-	# Evaluate Index
-	var idx_end = find_matching_token(current_index - 1, "[", "]") # -1 because we are at token AFTER [
-	# Actually, easier to just find the next ']' if we assume simple structure, 
-	# but find_matching is safer for arr[x+1]
-	
-	# We advanced current_index to start of index expression
-	# Reset it slightly to use find_matching properly if we pass the opening bracket index?
-	# My find_matching logic scans from start_index. 
-	# Let's find the closing bracket relative to the opening one at (current_index - 1)
-	idx_end = find_matching_token(current_index - 1, "[", "]")
-	
+	var idx_end = find_matching_token(current_index - 1, "[", "]") 
 	var idx_str = get_tokens_as_string(current_index, idx_end)
 	var index_val = evaluate_expression(idx_str)
 	
-	current_index = idx_end + 1 # Skip ']'
+	current_index = idx_end + 1
 	
-	if tokens[current_index] != "=":
-		print("Error: Expected '=' after array index")
-		return
+	if tokens[current_index] != "=": return
 		
-	current_index += 1 # Skip '='
-	
-	# Evaluate Value
+	current_index += 1
 	var expr_end = find_next_terminator()
 	var expr_str = get_tokens_as_string(current_index, expr_end)
 	var value = evaluate_expression(expr_str)
 	
-	# Apply
 	if memory.has(var_name) and memory[var_name] is Array:
 		var arr = memory[var_name]
 		if index_val >= 0 and index_val < arr.size():
 			arr[index_val] = value
 			print("-> Array Update: ", var_name, "[", index_val, "] = ", value)
-		else:
-			print("Error: Array index out of bounds: ", index_val)
-	else:
-		print("Error: Variable is not an array: ", var_name)
 		
 	current_index = expr_end
-	if current_index < tokens.size() and tokens[current_index] == ";":
-		current_index += 1
+	if current_index < tokens.size() and tokens[current_index] == ";": current_index += 1
 
-# --- HANDLERS (Declaration Updated) ---
+# --- HANDLERS ---
 
 func handle_declaration():
 	var type = tokens[current_index] 
@@ -140,65 +167,47 @@ func handle_declaration():
 	var var_name = tokens[current_index]
 	current_index += 1
 	
-	# Check for Array Declaration: int arr[5];
 	if tokens[current_index] == "[":
-		current_index += 1 # Skip '['
-		
-		# Read size
+		current_index += 1
 		var size_end = find_next_token("]")
 		var size_str = get_tokens_as_string(current_index, size_end)
-		var size = 0
-		if size_str != "":
-			size = int(evaluate_expression(size_str))
-			
-		current_index = size_end + 1 # Skip ']'
+		var size = int(evaluate_expression(size_str))
+		current_index = size_end + 1
 		
-		# Initialize Array
 		var new_arr = []
 		new_arr.resize(size)
 		new_arr.fill(0)
 		memory[var_name] = new_arr
 		print("-> Declared Array: ", var_name, " size: ", size)
 		
-		# Check for immediate initialization? int arr[] = [1,2];
 		if current_index < tokens.size() and tokens[current_index] == "=":
-			# Handle assignment
 			current_index += 1
 			var expr_end = find_next_terminator()
-			var expr_str = get_tokens_as_string(current_index, expr_end)
-			var val = evaluate_expression(expr_str)
-			if val is Array:
-				memory[var_name] = val
-				print("-> Array Initialized: ", val)
+			var val = evaluate_expression(get_tokens_as_string(current_index, expr_end))
+			if val is Array: memory[var_name] = val
 			current_index = expr_end
 			
 		if current_index < tokens.size() and tokens[current_index] == ";": current_index += 1
 		return
 
-	# Standard Declaration
 	if tokens[current_index] == "=":
 		current_index += 1 
 		var expr_end = find_next_terminator()
 		var expr_str = get_tokens_as_string(current_index, expr_end)
-		
 		memory[var_name] = evaluate_expression(expr_str)
 		current_index = expr_end
 		if current_index < tokens.size() and tokens[current_index] == ";": current_index += 1
-		
 		print("-> Memory Update: ", var_name, " = ", memory[var_name])
 	else:
 		memory[var_name] = 0
 		if current_index < tokens.size() and tokens[current_index] == ";": current_index += 1
 		print("-> Declared: ", var_name)
 
-# --- CONTROL FLOW (Existing) ---
-
 func handle_if():
 	current_index += 1
 	if tokens[current_index] != "(": return
 	var start = current_index
 	var end = find_matching_token(start, "(", ")")
-	if end == -1: return
 	var res = evaluate_expression(get_tokens_as_string(start + 1, end))
 	print("-> IF Check: ", res)
 	last_if_result = (res == true)
@@ -240,13 +249,11 @@ func handle_for():
 	if tokens[current_index] != "(": return
 	var header_open = current_index
 	var header_close = find_matching_token(header_open, "(", ")")
-	var s1 = -1
-	var s2 = -1
+	var s1 = -1; var s2 = -1
 	for i in range(header_open + 1, header_close):
 		if tokens[i] == ";":
 			if s1 == -1: s1 = i
 			elif s2 == -1: s2 = i; break
-	if s1 == -1 or s2 == -1: return
 
 	# Init
 	current_index = header_open + 1
@@ -285,9 +292,7 @@ func handle_switch():
 	if tokens[current_index] != "{": return
 	var block_end = find_matching_token(current_index, "{", "}")
 	control_stack.append({"type": "switch", "end_index": block_end})
-	var match_idx = -1
-	var def_idx = -1
-	var scan = current_index + 1
+	var match_idx = -1; var def_idx = -1; var scan = current_index + 1
 	while scan < block_end:
 		if tokens[scan] == "case":
 			var check = parse_value(tokens[scan + 1])
@@ -322,7 +327,6 @@ func handle_break():
 						current_index = i + 1
 						control_stack.resize(stack_idx)
 						return
-			break
 		elif ctx.type == "switch":
 			current_index = ctx.end_index + 1
 			control_stack.resize(stack_idx)
@@ -361,7 +365,9 @@ func handle_increment():
 	if memory.has(var_name):
 		memory[var_name] += 1
 		print("-> Incremented: ", var_name, " to ", memory[var_name])
-	current_index += 3
+	
+	if peek(1) == "++": current_index += 2
+	else: current_index += 3 # x + +
 	if current_index < tokens.size() and tokens[current_index] == ";": current_index += 1
 
 func handle_block_end():
@@ -376,11 +382,10 @@ func handle_block_end():
 		while current_index < ctx.increment_end:
 			if memory.has(tokens[current_index]):
 				if peek(1) == "=": handle_assignment()
-				elif peek(1) == "+" and peek(2) == "+": handle_increment()
+				elif peek(1) == "++": handle_increment()
 				else: current_index += 1
 			else: current_index += 1
 		var res = evaluate_expression(ctx.condition_str)
-		print("-> FOR Loopback: ", res)
 		if res == true:
 			control_stack.append(ctx)
 			current_index = ctx.body_start
@@ -393,7 +398,6 @@ func handle_block_end():
 func skip_block():
 	var idx = find_matching_token(current_index, "{", "}")
 	if idx != -1: current_index = idx + 1
-	else: print("Error: Missing closing '}'")
 
 # --- HELPERS ---
 
@@ -413,10 +417,12 @@ func evaluate_expression(math_string: String):
 func find_matching_token(start_index: int, open_char: String, close_char: String) -> int:
 	var depth = 0
 	for i in range(start_index, tokens.size()):
-		if tokens[i] == open_char: depth += 1
+		if tokens[i] == open_char:
+			depth += 1
 		elif tokens[i] == close_char:
 			depth -= 1
-			if depth == 0: return i
+			if depth == 0:
+				return i
 	return -1
 
 func find_next_token(target: String) -> int:
@@ -438,16 +444,33 @@ func peek(offset: int) -> String:
 	if current_index + offset < tokens.size(): return tokens[current_index + offset]
 	return ""
 
+# --- IMPROVED TOKENIZER ---
 func _tokenize(source: String) -> Array[String]:
 	var t: Array[String] = []
+	var i = 0
 	var cur = ""
-	for i in range(source.length()):
+	while i < source.length():
 		var char = source[i]
+		
+		# 1. Look ahead for multi-character operators (<=, ++, etc.)
+		if i + 1 < source.length():
+			var pair = char + source[i+1]
+			if pair in MULTI_DELIMS:
+				if cur.strip_edges() != "": t.append(cur)
+				t.append(pair)
+				cur = ""
+				i += 2
+				continue
+		
+		# 2. Handle single-character delimiters
 		if char in DELIMITERS:
 			if cur.strip_edges() != "":
 				t.append(cur)
 				cur = ""
 			if char.strip_edges() != "": t.append(char)
-		else: cur += char
+		else:
+			cur += char
+		i += 1
+		
 	if cur.strip_edges() != "": t.append(cur)
 	return t

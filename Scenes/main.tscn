@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://bwom6kpk0belt"]
+[gd_scene load_steps=14 format=3 uid="uid://bwom6kpk0belt"]
 
 [ext_resource type="Script" uid="uid://eiom31sjd5e8" path="res://Scripts/Scenes/main.gd" id="1_bo1nx"]
 [ext_resource type="PackedScene" uid="uid://bfc6rqccgyicl" path="res://Scenes/wizard.tscn" id="1_jjgbg"]
@@ -8,23 +8,26 @@
 [ext_resource type="Resource" uid="uid://dxyjdcdqu13c3" path="res://Resources/Tokens/Blank.tres" id="6_21xkr"]
 [ext_resource type="PackedScene" uid="uid://ds2j5mhtx04nq" path="res://Scenes/block_spawner.tscn" id="7_6bp64"]
 [ext_resource type="PackedScene" uid="uid://cjf18k0ntfnqf" path="res://Scenes/compiler.tscn" id="8_344ge"]
+[ext_resource type="Texture2D" uid="uid://blevv62ls6lj4" path="res://Assets/Tower/Tower Background.png" id="8_ynf5e"]
 
-[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_bo1nx"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ynf5e"]
+size = Vector2(20, 1120)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hptm8"]
+size = Vector2(20, 1120)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_d1ilt"]
+size = Vector2(1960, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6iyac"]
+size = Vector2(1960, 20)
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_bo1nx")
 
-[node name="Wizard" parent="." instance=ExtResource("1_jjgbg")]
-position = Vector2(676, 238)
-
-[node name="StaticBody2D" type="StaticBody2D" parent="."]
-position = Vector2(388, 639)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
-shape = SubResource("WorldBoundaryShape2D_bo1nx")
-
-[node name="Drop Zone" parent="." instance=ExtResource("3_8gbba")]
-position = Vector2(986, 324)
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(427, 479)
+texture = ExtResource("8_ynf5e")
 
 [node name="CodeBlock" parent="." instance=ExtResource("4_kry3j")]
 token_data = ExtResource("5_21xkr")
@@ -39,4 +42,32 @@ token_data = ExtResource("6_21xkr")
 
 [node name="Compiler" parent="." instance=ExtResource("8_344ge")]
 
+[node name="Drop Zone" parent="." instance=ExtResource("3_8gbba")]
+position = Vector2(1066, 427)
+
+[node name="Wizard" parent="." instance=ExtResource("1_jjgbg")]
+position = Vector2(683, 292)
+
+[node name="Camera2D" parent="Wizard" index="5" node_paths=PackedStringArray("boundary_node")]
+boundary_node = NodePath("../../Boundary")
+
+[node name="Boundary" type="StaticBody2D" parent="."]
+
+[node name="Left Wall" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(-543, 479)
+shape = SubResource("RectangleShape2D_ynf5e")
+
+[node name="Right Wall" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(1397, 479)
+shape = SubResource("RectangleShape2D_hptm8")
+
+[node name="Ceiling" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(427, -71)
+shape = SubResource("RectangleShape2D_d1ilt")
+
+[node name="Ground" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(427, 1029)
+shape = SubResource("RectangleShape2D_6iyac")
+
 [editable path="Compiler"]
+[editable path="Wizard"]

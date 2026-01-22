@@ -8,74 +8,76 @@ class_name GridShifter
 
 # Calculates indentation relative to the parent block's line start
 func get_indent_x(target_row_index: int, item: Area2D) -> float:
-	var top_left = zone.collision_shape.position - (zone.collision_shape.shape.size / 2)
+	var size = zone.collision_shape.shape.size
+	var top_left = zone.collision_shape.position - (size / 2)
+	var max_rows = int(size.y / zone.grid_size)
+	var max_cols = int(size.x / zone.grid_size)
 	
-	# 1. Gather all valid blocks
+	# 1. Gather all valid blocks within the DropZone bounds
 	var all_blocks = []
 	var raw_nodes = get_tree().get_nodes_in_group("pickup_items")
+	
 	for block in raw_nodes:
 		if not is_instance_valid(block) or not block is CodeBlock: continue
 		if block == item: continue 
 		
-		# Ignore held items
+		# Ignore items currently being held
 		if block.has_node("CollisionShape2D"):
 			if block.get_node("CollisionShape2D").disabled:
 				continue
 		
-		all_blocks.append(block)
+		# CRITICAL: Use logical position (meta) to calculate the row for indentation
+		var current_y = block.get_meta("target_global_y", block.global_position.y)
+		var block_local = zone.to_local(Vector2(block.global_position.x, current_y)) - top_left
+		
+		# Center sampling for stable detection
+		var row = floor((block_local.y + zone.grid_size / 2.0) / zone.grid_size)
+		var col = floor((block_local.x + zone.grid_size / 2.0) / zone.grid_size)
+		
+		if col >= 0 and col < max_cols and row >= 0 and row < max_rows:
+			all_blocks.append({
+				"node": block,
+				"row": int(row),
+				"col": int(col)
+			})
 
-	# 2. Sort blocks to read backwards (Bottom-Up, Right-to-Left)
+	# 2. Sort blocks Bottom-to-Top, Right-to-Left (Reading Backwards)
 	all_blocks.sort_custom(func(a, b):
-		var a_pos = zone.to_local(a.global_position)
-		var b_pos = zone.to_local(b.global_position)
-		var a_row = round(a_pos.y / zone.grid_size)
-		var b_row = round(b_pos.y / zone.grid_size)
-		
-		if a_row != b_row:
-			return a_row > b_row 
-		
-		var a_col = round(a_pos.x / zone.grid_size)
-		var b_col = round(b_pos.x / zone.grid_size)
-		return a_col > b_col 
+		if a.row != b.row:
+			return a.row > b.row 
+		return a.col > b.col 
 	)
 
 	# 3. Find the Parent Scope
 	var parent_row_index = -1
 	var bracket_stack = 0
 	
-	for block in all_blocks:
-		var block_pos = zone.to_local(block.global_position) - top_left
-		var row = int(round(block_pos.y / zone.grid_size))
-		
-		if row < target_row_index:
-			if block.token_data:
-				var code = block.token_data.code_string
+	for b_data in all_blocks:
+		if b_data.row < target_row_index:
+			if b_data.node.token_data:
+				var code = b_data.node.token_data.code_string
 				if "}" in code:
 					bracket_stack += 1
 				if "{" in code:
 					if bracket_stack > 0:
 						bracket_stack -= 1
 					else:
-						parent_row_index = row
+						parent_row_index = b_data.row
 						break 
 	
 	# 4. Calculate Indentation based on Parent Row
 	var indent_col = 0.0
-	
 	if parent_row_index != -1:
 		var min_col = 99999
-		for block in all_blocks:
-			var block_pos = zone.to_local(block.global_position) - top_left
-			var row = int(round(block_pos.y / zone.grid_size))
-			var col = int(round(block_pos.x / zone.grid_size))
-			
-			if row == parent_row_index:
-				if col < min_col:
-					min_col = col
+		for b_data in all_blocks:
+			if b_data.row == parent_row_index:
+				if b_data.col < min_col:
+					min_col = b_data.col
 		
 		if min_col != 99999:
 			indent_col = min_col + 1
 
+	# Adjustment: Closing brackets should un-indent themselves
 	if item is CodeBlock and item.token_data:
 		if "}" in item.token_data.code_string:
 			indent_col -= 1
@@ -88,173 +90,124 @@ func shift_rows_down(from_row_index: int, amount: int = 1, ignore_item: Area2D =
 	var size = zone.collision_shape.shape.size
 	var max_rows = int(size.y / zone.grid_size)
 	
-	# 1. Identify blocks to move
 	var blocks_to_shift = _get_blocks_below_row(from_row_index, ignore_item)
+	if blocks_to_shift.is_empty(): return true
 
-	if blocks_to_shift.is_empty():
-		return true
-
-	# 2. Check Bounds
+	# Bounds check using logical destination
 	for b in blocks_to_shift:
 		if b.row + amount >= max_rows:
-			print("Cannot shift rows: Block would fall out of bounds.")
 			return false
 
-	# 3. Apply Shift
 	for b in blocks_to_shift:
 		var block = b.node
+		var current_target_y = block.get_meta("target_global_y", block.global_position.y)
+		var new_target_y = current_target_y + (zone.grid_size * amount)
+		
+		block.set_meta("target_global_y", new_target_y)
+		
 		var tween = create_tween()
-		tween.tween_property(block, "global_position", block.global_position + Vector2(0, zone.grid_size * amount), 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tween.tween_property(block, "global_position:y", new_target_y, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		
 	return true
 
-# --- NEW: Shift Rows Up ---
 func shift_rows_up(from_row_index: int, amount: int = 1, ignore_item: Area2D = null) -> bool:
-	# 1. Identify blocks to move (from the row BELOW the button, moving UP)
 	var blocks_to_shift = _get_blocks_below_row(from_row_index + 1, ignore_item)
+	if blocks_to_shift.is_empty(): return true
 
-	if blocks_to_shift.is_empty():
-		return true
-
-	# 2. Check Bounds (Don't push off the top)
 	for b in blocks_to_shift:
-		if b.row - amount < 0:
-			print("Cannot shift rows up: Block would fall out of bounds (Top).")
-			return false
+		if b.row - amount < 0: return false
 	
-	# 3. Check Collision (Don't overwrite existing blocks)
-	# We are moving blocks INTO the rows starting at [from_row_index].
-	# We need to check if the destination rows [from_row_index, from_row_index - amount + 1] are occupied.
-	# For amount=1, we check if 'from_row_index' is occupied.
-	var check_start_row = from_row_index - amount + 1
-	var check_end_row = from_row_index
-	
-	if _is_range_occupied(check_start_row, check_end_row, ignore_item):
-		print("Cannot shift rows up: Destination row is occupied.")
+	if _is_range_occupied(from_row_index - amount + 1, from_row_index, ignore_item):
 		return false
 			
-	# 4. Apply Shift
 	for b in blocks_to_shift:
 		var block = b.node
+		var current_target_y = block.get_meta("target_global_y", block.global_position.y)
+		var new_target_y = current_target_y - (zone.grid_size * amount)
+		
+		block.set_meta("target_global_y", new_target_y)
+		
 		var tween = create_tween()
-		tween.tween_property(block, "global_position", block.global_position - Vector2(0, zone.grid_size * amount), 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tween.tween_property(block, "global_position:y", new_target_y, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		
 	return true
 
 func can_accommodate_block(global_pos: Vector2, width_units: int, ignore_item: Area2D) -> bool:
-	var local_pos = zone.to_local(global_pos)
 	var size = zone.collision_shape.shape.size
 	var top_left = zone.collision_shape.position - (size / 2)
-	var shifted_pos = local_pos - top_left
+	var local_pos = zone.to_local(global_pos) - top_left
 	
-	var max_x_width = size.x
-	var max_rows = int(size.y / zone.grid_size)
-	
-	var drop_row_index = int(floor(shifted_pos.y / zone.grid_size))
-	var drop_row_y = floor(shifted_pos.y / zone.grid_size) * zone.grid_size
-	var drop_start_x = floor(shifted_pos.x / zone.grid_size) * zone.grid_size
+	var drop_row_index = int(floor((local_pos.y + zone.grid_size / 2.0) / zone.grid_size))
+	var drop_start_x = floor((local_pos.x + zone.grid_size / 2.0) / zone.grid_size) * zone.grid_size
 	var drop_end_x = drop_start_x + (width_units * zone.grid_size)
 	
-	# 1. Check Horizontal Bounds
-	if drop_end_x > max_x_width:
-		return false
+	if drop_end_x > size.x: return false
 
-	# 2. Check Vertical Bounds (Structure Insert)
+	# Logic for structure spacing check
 	if zone.spawner and ignore_item is CodeBlock and ignore_item.token_data:
 		var code = ignore_item.token_data.code_string
 		if code in zone.spawner.structures:
 			var blueprint = zone.spawner.structures[code]
-			var max_y_offset = 0
-			for part in blueprint:
-				if part["y"] > max_y_offset:
-					max_y_offset = int(part["y"])
+			var max_y = 0
+			for p in blueprint: if p["y"] > max_y: max_y = int(p["y"])
 			
-			if max_y_offset > 0:
+			if max_y > 0:
 				var blocks_below = _get_blocks_below_row(drop_row_index + 1, ignore_item)
 				for b in blocks_below:
-					if b.row + max_y_offset >= max_rows:
-						return false
-				
-				var blocks_current = _get_horizontal_shift_blocks(drop_row_y, drop_start_x, ignore_item)
-				if not blocks_current.is_empty():
-					if drop_row_index + 1 >= max_rows:
-						return false
-
-	var blocks_to_shift = _get_horizontal_shift_blocks(drop_row_y, drop_start_x, ignore_item)
-
-	if blocks_to_shift.is_empty():
-		return true
-
-	var closest_block_x = 99999.0
-	for b in blocks_to_shift:
-		if b.x < closest_block_x:
-			closest_block_x = b.x
-			
-	var overlap = drop_end_x - closest_block_x
-	
-	if overlap > 0:
-		var shift_units = ceil(overlap / zone.grid_size)
-		var shift_pixels = shift_units * zone.grid_size
-		
-		for b in blocks_to_shift:
-			var new_end_x = b.end_x + shift_pixels
-			if new_end_x > max_x_width:
-				return false 
+					if b.row + max_y >= int(size.y / zone.grid_size): return false
 
 	return true
 
 func request_space_for_block(global_pos: Vector2, width_units: int, ignore_item: Area2D):
-	var local_pos = zone.to_local(global_pos)
-	var top_left = zone.collision_shape.position - (zone.collision_shape.shape.size / 2)
-	var shifted_pos = local_pos - top_left
+	var size = zone.collision_shape.shape.size
+	var top_left = zone.collision_shape.position - (size / 2)
+	var local_pos = zone.to_local(global_pos) - top_left
 	
-	var drop_row_y = floor(shifted_pos.y / zone.grid_size) * zone.grid_size
-	var drop_row_index = int(floor(shifted_pos.y / zone.grid_size))
-	var drop_start_x = floor(shifted_pos.x / zone.grid_size) * zone.grid_size
+	var drop_row_y = floor((local_pos.y + zone.grid_size / 2.0) / zone.grid_size) * zone.grid_size
+	var drop_row_index = int(floor((local_pos.y + zone.grid_size / 2.0) / zone.grid_size))
+	var drop_start_x = floor((local_pos.x + zone.grid_size / 2.0) / zone.grid_size) * zone.grid_size
 	var drop_end_x = drop_start_x + (width_units * zone.grid_size)
 	
-	var structure_handled_overlap = false
+	var structure_handled_rows = false
 	
+	# 1. Structure Vertical Push
 	if zone.spawner and ignore_item is CodeBlock and ignore_item.token_data:
 		var code = ignore_item.token_data.code_string
 		if code in zone.spawner.structures:
 			var blueprint = zone.spawner.structures[code]
-			var max_y_offset = 0
-			for part in blueprint:
-				if part["y"] > max_y_offset:
-					max_y_offset = int(part["y"])
-			
-			if max_y_offset > 0:
-				shift_rows_down(drop_row_index + 1, max_y_offset, ignore_item)
+			var max_y = 0
+			for p in blueprint: if p["y"] > max_y: max_y = int(p["y"])
+			if max_y > 0:
+				shift_rows_down(drop_row_index + 1, max_y, ignore_item)
 				
-				var blocks_on_current_row = _get_horizontal_shift_blocks(drop_row_y, drop_start_x, ignore_item)
-				if not blocks_on_current_row.is_empty():
-					for b in blocks_on_current_row:
-						var block = b.node
-						var tween = create_tween()
-						tween.tween_property(block, "global_position", block.global_position + Vector2(0, zone.grid_size), 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-					structure_handled_overlap = true
+				# Push blocks on the current row down to clear space for the structure head
+				var current_row_blocks = _get_horizontal_shift_blocks(drop_row_y, drop_start_x, ignore_item)
+				for b in current_row_blocks:
+					var block = b.node
+					var next_y = block.get_meta("target_global_y", block.global_position.y) + zone.grid_size
+					block.set_meta("target_global_y", next_y)
+					var tween = create_tween()
+					tween.tween_property(block, "global_position:y", next_y, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+				
+				structure_handled_rows = true
 	
-	if not structure_handled_overlap:
-		var blocks_to_move = _get_horizontal_shift_blocks(drop_row_y, drop_start_x, ignore_item)
-
-		if blocks_to_move.is_empty(): return
-
-		var closest_block_x = 99999.0
-		for b in blocks_to_move:
-			if b.x < closest_block_x:
-				closest_block_x = b.x
-				
-		var overlap = drop_end_x - closest_block_x
-		
-		if overlap > 0:
-			var shift_units = ceil(overlap / zone.grid_size)
-			var shift_pixels = shift_units * zone.grid_size
+	# 2. Horizontal Shift (If not pushing rows)
+	if not structure_handled_rows:
+		var horizontal_blocks = _get_horizontal_shift_blocks(drop_row_y, drop_start_x, ignore_item)
+		if not horizontal_blocks.is_empty():
+			var min_x = 99999.0
+			for b in horizontal_blocks: if b.x < min_x: min_x = b.x
 			
-			for b in blocks_to_move:
-				var block = b.node
-				var tween = create_tween()
-				tween.tween_property(block, "global_position", block.global_position + Vector2(shift_pixels, 0), 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+			var overlap = drop_end_x - min_x
+			if overlap > 0:
+				var shift = ceil(overlap / zone.grid_size) * zone.grid_size
+				for b in horizontal_blocks:
+					var block = b.node
+					var cur_x = block.get_meta("target_global_x", block.global_position.x)
+					var next_x = cur_x + shift
+					block.set_meta("target_global_x", next_x)
+					var tween = create_tween()
+					tween.tween_property(block, "global_position:x", next_x, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 # --- INTERNAL HELPERS ---
 
@@ -262,24 +215,18 @@ func _get_blocks_below_row(from_row_index: int, ignore_item: Area2D = null) -> A
 	var size = zone.collision_shape.shape.size
 	var top_left = zone.collision_shape.position - (size / 2)
 	var max_rows = int(size.y / zone.grid_size)
-	# FIX 2: Check horizontal bounds too
 	var max_cols = int(size.x / zone.grid_size)
 	var blocks = []
 	
-	var all_blocks = get_tree().get_nodes_in_group("pickup_items")
-	for block in all_blocks:
-		if block == ignore_item: continue
-		if not block is CodeBlock: continue
+	for block in get_tree().get_nodes_in_group("pickup_items"):
+		if block == ignore_item or not block is CodeBlock: continue
+		if block.has_node("CollisionShape2D") and block.get_node("CollisionShape2D").disabled: continue
 		
-		if block.has_node("CollisionShape2D"):
-			if block.get_node("CollisionShape2D").disabled:
-				continue
+		var cur_y = block.get_meta("target_global_y", block.global_position.y)
+		var block_local = zone.to_local(Vector2(block.global_position.x, cur_y)) - top_left
+		var row = floor((block_local.y + zone.grid_size / 2.0) / zone.grid_size)
+		var col = floor((block_local.x + zone.grid_size / 2.0) / zone.grid_size)
 		
-		var block_local = zone.to_local(block.global_position) - top_left
-		var row = round(block_local.y / zone.grid_size)
-		var col = round(block_local.x / zone.grid_size)
-		
-		# FIX 2: Strict bounds check for Row AND Column
 		if col >= 0 and col < max_cols and row >= 0 and row < max_rows:
 			if row >= from_row_index:
 				blocks.append({"node": block, "row": int(row)})
@@ -288,59 +235,21 @@ func _get_blocks_below_row(from_row_index: int, ignore_item: Area2D = null) -> A
 func _get_horizontal_shift_blocks(drop_row_y: float, drop_start_x: float, ignore_item: Area2D) -> Array:
 	var blocks = []
 	var size = zone.collision_shape.shape.size
-	var top_left = zone.collision_shape.position - (zone.collision_shape.shape.size / 2)
-	var max_cols = int(size.x / zone.grid_size) 
-	
-	var all_blocks = get_tree().get_nodes_in_group("pickup_items")
-	
-	for block in all_blocks:
-		if block == ignore_item: continue
-		if not block is CodeBlock: continue
+	var top_left = zone.collision_shape.position - (size / 2)
+	for block in get_tree().get_nodes_in_group("pickup_items"):
+		if block == ignore_item or not block is CodeBlock: continue
+		if block.has_node("CollisionShape2D") and block.get_node("CollisionShape2D").disabled: continue
 		
-		if block.has_node("CollisionShape2D"):
-			if block.get_node("CollisionShape2D").disabled:
-				continue
+		var cur_y = block.get_meta("target_global_y", block.global_position.y)
+		var cur_x = block.get_meta("target_global_x", block.global_position.x)
+		var block_local = zone.to_local(Vector2(cur_x, cur_y)) - top_left
 		
-		var block_local = zone.to_local(block.global_position) - top_left
-		var block_y = floor(block_local.y / zone.grid_size) * zone.grid_size
-		var block_x = floor(block_local.x / zone.grid_size) * zone.grid_size
-		var col = round(block_local.x / zone.grid_size)
-		
-		if col < 0 or col >= max_cols: continue
-		
-		if is_equal_approx(block_y, drop_row_y) and block_x >= drop_start_x:
-			var block_w = 1
-			if block.token_data: block_w = block.token_data.width_units
-			blocks.append({
-				"node": block, 
-				"x": block_x,
-				"end_x": block_x + (block_w * zone.grid_size)
-			})
+		if is_equal_approx(floor((block_local.y + zone.grid_size / 2.0) / zone.grid_size) * zone.grid_size, drop_row_y) and block_local.x >= drop_start_x:
+			blocks.append({"node": block, "x": block_local.x})
 	return blocks
 
-# NEW: Checks if any blocks exist in the given row range
 func _is_range_occupied(start_row: int, end_row: int, ignore_item: Area2D = null) -> bool:
-	var size = zone.collision_shape.shape.size
-	var top_left = zone.collision_shape.position - (size / 2)
-	var max_cols = int(size.x / zone.grid_size)
-	
-	var all_blocks = get_tree().get_nodes_in_group("pickup_items")
-	for block in all_blocks:
-		if block == ignore_item: continue
-		if not block is CodeBlock: continue
-		
-		if block.has_node("CollisionShape2D"):
-			if block.get_node("CollisionShape2D").disabled:
-				continue
-		
-		var block_local = zone.to_local(block.global_position) - top_left
-		var row = round(block_local.y / zone.grid_size)
-		var col = round(block_local.x / zone.grid_size)
-		
-		# Check if inside grid horizontally
-		if col >= 0 and col < max_cols:
-			# Check row range
-			if row >= start_row and row <= end_row:
-				return true
-				
+	var results = _get_blocks_below_row(start_row, ignore_item)
+	for b in results:
+		if b.row <= end_row: return true
 	return false
