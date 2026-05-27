@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://br1dluevqbou"
+
+[deps]
+
+files=["res://_bmad/bmb/module-help.skill.translation", "res://_bmad/bmb/module-help.display.translation", "res://_bmad/bmb/module-help.menu.translation", "res://_bmad/bmb/module-help.description.translation", "res://_bmad/bmb/module-help.action.translation", "res://_bmad/bmb/module-help.args.translation", "res://_bmad/bmb/module-help.phase.translation", "res://_bmad/bmb/module-help.preceded.translation", "res://_bmad/bmb/module-help.followed.translation", "res://_bmad/bmb/module-help.required.translation", "res://_bmad/bmb/module-help.output.translation", "res://_bmad/bmb/module-help.outputs.translation"]
+
+source_file="res://_bmad/bmb/module-help.csv"
+dest_files=["res://_bmad/bmb/module-help.skill.translation", "res://_bmad/bmb/module-help.display.translation", "res://_bmad/bmb/module-help.menu.translation", "res://_bmad/bmb/module-help.description.translation", "res://_bmad/bmb/module-help.action.translation", "res://_bmad/bmb/module-help.args.translation", "res://_bmad/bmb/module-help.phase.translation", "res://_bmad/bmb/module-help.preceded.translation", "res://_bmad/bmb/module-help.followed.translation", "res://_bmad/bmb/module-help.required.translation", "res://_bmad/bmb/module-help.output.translation", "res://_bmad/bmb/module-help.outputs.translation"]
+
+[params]
+
+compress=true
+delimiter=0

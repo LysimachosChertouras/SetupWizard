@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3 uid="uid://dhwn2rwrohweq"]
+
+[ext_resource type="Texture2D" uid="uid://5m57vc5hjmmq" path="res://WIP Assets/Apprentice.png" id="1_2ya2r"]
+[ext_resource type="Script" uid="uid://be1ch0b31bg58" path="res://Scripts/Apprentice/Apprentice.gd" id="1_k8v4y"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ln8j5"]
+
+[node name="Apprentice" type="CharacterBody2D"]
+collision_layer = 16
+collision_mask = 16
+script = ExtResource("1_k8v4y")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_ln8j5")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_2ya2r")
+
+[node name="RayCast2D" type="RayCast2D" parent="."]

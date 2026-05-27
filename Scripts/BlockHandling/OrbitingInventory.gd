@@ -16,6 +16,10 @@ var is_paused: bool = false
 
 const GRID_SIZE = 32
 
+func _ready() -> void:
+	# Add to group so DropZones can find this to check if blocks are being held
+	add_to_group("player_inventory")
+
 func _process(delta: float) -> void:
 	_update_orbit(delta)
 
@@ -32,6 +36,11 @@ func add_item(item: Area2D) -> bool:
 	held_items.append(item)
 	selected_index = held_items.size() - 1
 	orbit_angle = 0.0 
+	
+	# Ensure the item renders in front of ground blocks
+	if item is Node2D:
+		item.z_index = 10
+		
 	return true
 
 func remove_item(item: Area2D) -> void:
@@ -41,6 +50,10 @@ func remove_item(item: Area2D) -> void:
 		
 		item.modulate = Color.WHITE
 		item.scale = Vector2.ONE
+		
+		# Reset Z-index so it returns to the ground layer
+		if item is Node2D:
+			item.z_index = 0
 		
 		if item.has_method("set_highlight"):
 			item.set_highlight(false)

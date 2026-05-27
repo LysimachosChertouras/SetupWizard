@@ -1,0 +1,93 @@
+[gd_scene load_steps=13 format=3 uid="uid://pcl11sfjtjqm"]
+
+[ext_resource type="Script" uid="uid://dpslaby6dkwbx" path="res://Scripts/Challenge Board/BaseChallenge.gd" id="1_j0k67"]
+[ext_resource type="Texture2D" uid="uid://blevv62ls6lj4" path="res://Assets/Tower/Tower Background.png" id="2_5r5j8"]
+[ext_resource type="Resource" uid="uid://cymbt00u680ts" path="res://Resources/Challenges/Variables & Math/Level_1.tres" id="2_iyh3f"]
+[ext_resource type="PackedScene" uid="uid://cqar2i52vrn0e" path="res://Scenes/drop_zone.tscn" id="3_akpl7"]
+[ext_resource type="PackedScene" uid="uid://bfc6rqccgyicl" path="res://Scenes/wizard.tscn" id="4_aur7v"]
+[ext_resource type="Texture2D" uid="uid://dguiqeo6s85dm" path="res://WIP Assets/Block Drawers.png" id="5_ptpgp"]
+[ext_resource type="PackedScene" uid="uid://uwji00ee188l" path="res://Scenes/Challenge_Board.tscn" id="6_2uqsa"]
+[ext_resource type="PackedScene" uid="uid://dg46ynffklloi" path="res://Scenes/code_block.tscn" id="8_ducwx"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ynf5e"]
+size = Vector2(20, 1120)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hptm8"]
+size = Vector2(20, 1120)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_d1ilt"]
+size = Vector2(1960, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6iyac"]
+size = Vector2(1960, 20)
+
+[node name="Main" type="Node2D" node_paths=PackedStringArray("challenge_manager")]
+script = ExtResource("1_j0k67")
+level_resource = ExtResource("2_iyh3f")
+challenge_manager = NodePath("ChallengeBoard/ChallengeManager")
+
+[node name="Background" type="Sprite2D" parent="."]
+position = Vector2(427, 479)
+texture = ExtResource("2_5r5j8")
+
+[node name="Drop Zone" parent="." instance=ExtResource("3_akpl7")]
+position = Vector2(1066, 427)
+
+[node name="Scanner" parent="Drop Zone/Compiler" index="0" node_paths=PackedStringArray("challenge_manager")]
+challenge_manager = NodePath("../../../ChallengeBoard/ChallengeManager")
+
+[node name="Wizard" parent="." instance=ExtResource("4_aur7v")]
+position = Vector2(-182.99994, 221)
+
+[node name="Camera2D" parent="Wizard" index="5" node_paths=PackedStringArray("boundary_node")]
+boundary_node = NodePath("../../Boundary")
+camera_margin = 32
+zoom_level = 1.65
+
+[node name="Boundary" type="StaticBody2D" parent="."]
+
+[node name="Left Wall" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(-543, 479)
+shape = SubResource("RectangleShape2D_ynf5e")
+
+[node name="Right Wall" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(1397, 479)
+shape = SubResource("RectangleShape2D_hptm8")
+
+[node name="Ceiling" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(427, -71)
+shape = SubResource("RectangleShape2D_d1ilt")
+
+[node name="Ground" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(427, 1029)
+shape = SubResource("RectangleShape2D_6iyac")
+
+[node name="Decorations" type="Node2D" parent="."]
+
+[node name="Shelves" type="Sprite2D" parent="Decorations"]
+position = Vector2(657, 633)
+texture = ExtResource("5_ptpgp")
+
+[node name="ChallengeBoard" parent="." instance=ExtResource("6_2uqsa")]
+position = Vector2(231, -6)
+
+[node name="ChallengeManager" parent="ChallengeBoard" index="1" node_paths=PackedStringArray("interpreter", "block_spawn_point", "math_title_label", "math_instruction_label", "math_console_output", "math_memory_inspector", "maze_title_label", "maze_console_output", "maze_memory_inspector")]
+position = Vector2(-2, 0)
+interpreter = NodePath("../../Drop Zone/Compiler/Interpreter")
+block_spawner_scene = ExtResource("8_ducwx")
+block_spawn_point = NodePath("../../BlockSpawnPoint")
+math_title_label = NodePath("MathDisplay/TitleLabelMth")
+math_instruction_label = NodePath("MathDisplay/InstructionLabel")
+math_console_output = NodePath("ConsoleContainer/ConsoleOutput")
+math_memory_inspector = NodePath("MathDisplay/MemoryInspector")
+maze_title_label = NodePath("MathDisplay/TitleLabelMth")
+maze_console_output = NodePath("ConsoleContainer/ConsoleOutput")
+maze_memory_inspector = NodePath("MathDisplay/MemoryInspector")
+
+[node name="BlockSpawnPoint" type="Node2D" parent="."]
+position = Vector2(625, 575)
+
+[editable path="Drop Zone"]
+[editable path="Drop Zone/Compiler"]
+[editable path="Wizard"]
+[editable path="ChallengeBoard"]

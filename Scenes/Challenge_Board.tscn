@@ -1,0 +1,125 @@
+[gd_scene load_steps=10 format=3 uid="uid://uwji00ee188l"]
+
+[ext_resource type="Texture2D" uid="uid://dljoqta0srs0x" path="res://WIP Assets/ChallengeBoard.png" id="1_5ya3a"]
+[ext_resource type="Script" uid="uid://dsxn8223ysr3u" path="res://Scripts/Challenge Board/ChallengeManager.gd" id="1_deeu0"]
+[ext_resource type="PackedScene" uid="uid://dhwn2rwrohweq" path="res://Scenes/Apprentice.tscn" id="2_exqhv"]
+[ext_resource type="PackedScene" uid="uid://dj8rdfughvaqg" path="res://Scenes/Wall.tscn" id="4_1wi2b"]
+[ext_resource type="FontFile" uid="uid://b2xsa430v5m25" path="res://Assets/Fonts/m5x7.ttf" id="7_ycbqe"]
+
+[sub_resource type="SystemFont" id="SystemFont_k015a"]
+subpixel_positioning = 0
+
+[sub_resource type="SystemFont" id="SystemFont_mthcm"]
+subpixel_positioning = 0
+
+[sub_resource type="SystemFont" id="SystemFont_djhkb"]
+subpixel_positioning = 0
+
+[sub_resource type="SystemFont" id="SystemFont_36dvm"]
+subpixel_positioning = 0
+
+[node name="ChallengeBoard" type="Node2D"]
+
+[node name="Board" type="Sprite2D" parent="."]
+position = Vector2(256, 256)
+texture = ExtResource("1_5ya3a")
+
+[node name="ChallengeManager" type="Node2D" parent="." node_paths=PackedStringArray("math_display", "maze_display", "title_label_math", "title_label_maze", "instruction_label", "console_output", "memory_inspector", "tile_container")]
+script = ExtResource("1_deeu0")
+math_display = NodePath("MathDisplay")
+maze_display = NodePath("MazeDisplay")
+title_label_math = NodePath("MathDisplay/TitleLabelMth")
+title_label_maze = NodePath("MazeDisplay/TitleLabelMz")
+instruction_label = NodePath("MathDisplay/InstructionLabel")
+console_output = NodePath("ConsoleContainer/ConsoleOutput")
+memory_inspector = NodePath("MathDisplay/MemoryInspector")
+tile_container = NodePath("MazeDisplay/TileContainer")
+apprentice_scene = ExtResource("2_exqhv")
+wall_scene = ExtResource("4_1wi2b")
+
+[node name="MathDisplay" type="Node2D" parent="ChallengeManager"]
+
+[node name="TitleLabelMth" type="Label" parent="ChallengeManager/MathDisplay"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 232.0
+offset_top = -37.0
+offset_right = 264.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="InstructionLabel" type="RichTextLabel" parent="ChallengeManager/MathDisplay"]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 508.0
+offset_bottom = 256.0
+theme_override_fonts/normal_font = ExtResource("7_ycbqe")
+theme_override_fonts/bold_font = ExtResource("7_ycbqe")
+theme_override_fonts/bold_italics_font = ExtResource("7_ycbqe")
+theme_override_fonts/italics_font = ExtResource("7_ycbqe")
+theme_override_fonts/mono_font = ExtResource("7_ycbqe")
+theme_override_font_sizes/normal_font_size = 32
+theme_override_font_sizes/bold_font_size = 32
+theme_override_font_sizes/bold_italics_font_size = 32
+theme_override_font_sizes/italics_font_size = 32
+theme_override_font_sizes/mono_font_size = 32
+
+[node name="MemoryInspector" type="RichTextLabel" parent="ChallengeManager/MathDisplay"]
+offset_left = 4.0
+offset_top = 256.0
+offset_right = 508.0
+offset_bottom = 508.0
+theme_override_fonts/normal_font = ExtResource("7_ycbqe")
+theme_override_fonts/bold_font = ExtResource("7_ycbqe")
+theme_override_fonts/bold_italics_font = ExtResource("7_ycbqe")
+theme_override_fonts/italics_font = ExtResource("7_ycbqe")
+theme_override_fonts/mono_font = ExtResource("7_ycbqe")
+theme_override_font_sizes/normal_font_size = 32
+theme_override_font_sizes/bold_font_size = 32
+theme_override_font_sizes/bold_italics_font_size = 32
+theme_override_font_sizes/italics_font_size = 32
+theme_override_font_sizes/mono_font_size = 32
+
+[node name="MazeDisplay" type="Node2D" parent="ChallengeManager"]
+
+[node name="TitleLabelMz" type="Label" parent="ChallengeManager/MazeDisplay"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 232.0
+offset_top = -37.0
+offset_right = 264.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TileContainer" type="Node2D" parent="ChallengeManager/MazeDisplay"]
+
+[node name="ConsoleContainer" type="Node2D" parent="ChallengeManager"]
+position = Vector2(196, 530)
+
+[node name="ConsoleOutput" type="RichTextLabel" parent="ChallengeManager/ConsoleContainer"]
+offset_left = -196.0
+offset_top = -8.0
+offset_right = 316.0
+offset_bottom = 72.0
+theme_override_fonts/normal_font = ExtResource("7_ycbqe")
+theme_override_fonts/bold_font = SubResource("SystemFont_k015a")
+theme_override_fonts/bold_italics_font = SubResource("SystemFont_mthcm")
+theme_override_fonts/italics_font = SubResource("SystemFont_djhkb")
+theme_override_fonts/mono_font = SubResource("SystemFont_36dvm")
+theme_override_font_sizes/normal_font_size = 32
+theme_override_font_sizes/bold_font_size = 32
+theme_override_font_sizes/bold_italics_font_size = 32
+theme_override_font_sizes/italics_font_size = 32
+theme_override_font_sizes/mono_font_size = 32

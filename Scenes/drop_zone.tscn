@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://cqar2i52vrn0e"]
+[gd_scene load_steps=11 format=3 uid="uid://cqar2i52vrn0e"]
 
 [ext_resource type="Script" uid="uid://bmn7pxdtx82s6" path="res://Scripts/BlockHandling/drop_zone.gd" id="1_tcq6s"]
 [ext_resource type="Script" uid="uid://bglhv0vq7ligy" path="res://Scripts/BlockHandling/structure_spawner.gd" id="2_shdp8"]
@@ -6,12 +6,16 @@
 [ext_resource type="Script" uid="uid://cqcpyn8cyrv5t" path="res://Scripts/GridHandling/GridShifter.gd" id="4_owibr"]
 [ext_resource type="Script" uid="uid://c6047w060vjv" path="res://Scripts/GridHandling/EnterButtonManager.gd" id="5_xbe6g"]
 [ext_resource type="Script" uid="uid://db2vbicqf0d8k" path="res://Scripts/GridHandling/ScopeDrawer.gd" id="6_xbe6g"]
+[ext_resource type="Texture2D" uid="uid://bomku3bp3n5xl" path="res://Assets/Tower/Grid.png" id="7_nwu27"]
+[ext_resource type="PackedScene" uid="uid://cjf18k0ntfnqf" path="res://Scenes/compiler.tscn" id="8_73w7n"]
+[ext_resource type="Texture2D" uid="uid://dqwivrn40b5os" path="res://WIP Assets/Highlight.png" id="9_ghhp6"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_shdp8"]
 size = Vector2(512, 864)
 
-[node name="Drop Zone" type="Area2D"]
+[node name="Drop Zone" type="Area2D" node_paths=PackedStringArray("grid_visual")]
 script = ExtResource("1_tcq6s")
+grid_visual = NodePath("Grid")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_shdp8")
@@ -28,3 +32,18 @@ enter_button_scene = ExtResource("2_vv7pd")
 
 [node name="ScopeDrawer" type="Node2D" parent="."]
 script = ExtResource("6_xbe6g")
+
+[node name="Grid" type="Sprite2D" parent="."]
+texture = ExtResource("7_nwu27")
+
+[node name="Compiler" parent="." instance=ExtResource("8_73w7n")]
+
+[node name="Scanner" parent="Compiler" index="0" node_paths=PackedStringArray("target_zone", "execution_pointer")]
+target_zone = NodePath("../..")
+execution_pointer = NodePath("../../Highlight")
+
+[node name="Highlight" type="Sprite2D" parent="."]
+z_index = 10
+texture = ExtResource("9_ghhp6")
+
+[editable path="Compiler"]

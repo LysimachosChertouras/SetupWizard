@@ -110,6 +110,26 @@ func _spawn_blueprint(blueprint: Array, root_block: CodeBlock, grid_size: int, c
 			print("Error: Could not load token data for: ", token_key)
 			continue
 			
+			
+		if resource_ref == null or (resource_ref is String and resource_ref == ""):
+			print("Error: Empty resource path in registry for key: ", token_key)
+			continue
+		
+		# Handle both String paths and direct Resources
+		if resource_ref is String:
+			if FileAccess.file_exists(resource_ref):
+				token_data = load(resource_ref)
+			else:
+				print("Error: File does not exist at path: ", resource_ref)
+				continue
+		elif resource_ref is TokenData:
+			token_data = resource_ref
+			
+		if not token_data: 
+			print("Error: Could not load token data for: ", token_key)
+			continue
+		
+		
 		var new_block = BLOCK_SCENE.instantiate()
 		container.call_deferred("add_child", new_block)
 		new_block.setup(token_data)

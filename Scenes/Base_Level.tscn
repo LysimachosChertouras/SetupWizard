@@ -1,0 +1,79 @@
+[gd_scene load_steps=11 format=3 uid="uid://bwom6kpk0belt"]
+
+[ext_resource type="Script" uid="uid://dpslaby6dkwbx" path="res://Scripts/Challenge Board/BaseChallenge.gd" id="1_i5daw"]
+[ext_resource type="Texture2D" uid="uid://blevv62ls6lj4" path="res://Assets/Tower/Tower Background.png" id="2_gh5cy"]
+[ext_resource type="PackedScene" uid="uid://cqar2i52vrn0e" path="res://Scenes/drop_zone.tscn" id="7_6000k"]
+[ext_resource type="PackedScene" uid="uid://bfc6rqccgyicl" path="res://Scenes/wizard.tscn" id="8_3a5fj"]
+[ext_resource type="Texture2D" uid="uid://dguiqeo6s85dm" path="res://WIP Assets/Block Drawers.png" id="9_s303j"]
+[ext_resource type="PackedScene" uid="uid://uwji00ee188l" path="res://Scenes/Challenge_Board.tscn" id="10_5wqha"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ynf5e"]
+size = Vector2(20, 1120)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hptm8"]
+size = Vector2(20, 1120)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_d1ilt"]
+size = Vector2(1960, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6iyac"]
+size = Vector2(1960, 20)
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_i5daw")
+
+[node name="Background" type="Sprite2D" parent="."]
+position = Vector2(427, 479)
+texture = ExtResource("2_gh5cy")
+
+[node name="Drop Zone" parent="." instance=ExtResource("7_6000k")]
+position = Vector2(1066, 427)
+
+[node name="Scanner" parent="Drop Zone/Compiler" index="0" node_paths=PackedStringArray("challenge_manager")]
+challenge_manager = NodePath("../../../ChallengeBoard/ChallengeManager")
+
+[node name="Wizard" parent="." instance=ExtResource("8_3a5fj")]
+position = Vector2(-182.99994, 221)
+
+[node name="Camera2D" parent="Wizard" index="5" node_paths=PackedStringArray("boundary_node")]
+boundary_node = NodePath("../../Boundary")
+camera_margin = 32
+zoom_level = 1.65
+
+[node name="Boundary" type="StaticBody2D" parent="."]
+
+[node name="Left Wall" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(-543, 479)
+shape = SubResource("RectangleShape2D_ynf5e")
+
+[node name="Right Wall" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(1397, 479)
+shape = SubResource("RectangleShape2D_hptm8")
+
+[node name="Ceiling" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(427, -71)
+shape = SubResource("RectangleShape2D_d1ilt")
+
+[node name="Ground" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(427, 1029)
+shape = SubResource("RectangleShape2D_6iyac")
+
+[node name="Decorations" type="Node2D" parent="."]
+
+[node name="Shelves" type="Sprite2D" parent="Decorations"]
+position = Vector2(657, 633)
+texture = ExtResource("9_s303j")
+
+[node name="ChallengeBoard" parent="." instance=ExtResource("10_5wqha")]
+position = Vector2(231, -6)
+
+[node name="ChallengeManager" parent="ChallengeBoard" index="1" node_paths=PackedStringArray("interpreter")]
+interpreter = NodePath("../../Drop Zone/Compiler/Interpreter")
+apprentice_scene = null
+
+[node name="BlockSpawnPoint" type="Node2D" parent="."]
+
+[editable path="Drop Zone"]
+[editable path="Drop Zone/Compiler"]
+[editable path="Wizard"]
+[editable path="ChallengeBoard"]

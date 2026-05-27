@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://cu516fxlhqueu"
+
+[deps]
+
+files=["res://_bmad/gds/module-help.skill.translation", "res://_bmad/gds/module-help.display.translation", "res://_bmad/gds/module-help.menu.translation", "res://_bmad/gds/module-help.description.translation", "res://_bmad/gds/module-help.action.translation", "res://_bmad/gds/module-help.args.translation", "res://_bmad/gds/module-help.phase.translation", "res://_bmad/gds/module-help.preceded.translation", "res://_bmad/gds/module-help.followed.translation", "res://_bmad/gds/module-help.required.translation", "res://_bmad/gds/module-help.output.translation", "res://_bmad/gds/module-help.outputs.translation"]
+
+source_file="res://_bmad/gds/module-help.csv"
+dest_files=["res://_bmad/gds/module-help.skill.translation", "res://_bmad/gds/module-help.display.translation", "res://_bmad/gds/module-help.menu.translation", "res://_bmad/gds/module-help.description.translation", "res://_bmad/gds/module-help.action.translation", "res://_bmad/gds/module-help.args.translation", "res://_bmad/gds/module-help.phase.translation", "res://_bmad/gds/module-help.preceded.translation", "res://_bmad/gds/module-help.followed.translation", "res://_bmad/gds/module-help.required.translation", "res://_bmad/gds/module-help.output.translation", "res://_bmad/gds/module-help.outputs.translation"]
+
+[params]
+
+compress=true
+delimiter=0

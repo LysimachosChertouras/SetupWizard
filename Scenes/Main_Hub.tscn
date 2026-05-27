@@ -1,0 +1,51 @@
+[gd_scene load_steps=7 format=3 uid="uid://bcwd7xvo8pu8t"]
+
+[ext_resource type="PackedScene" uid="uid://bfc6rqccgyicl" path="res://Scenes/wizard.tscn" id="1_vsete"]
+[ext_resource type="PackedScene" uid="uid://bfnbxnag3rk7f" path="res://Scenes/Level_Portal.tscn" id="2_wmq38"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wmq38"]
+size = Vector2(26, 653)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_eu3je"]
+size = Vector2(1254.5, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6spwp"]
+size = Vector2(20, 654)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kiphe"]
+size = Vector2(1248, 20)
+
+[node name="Node2D" type="Node2D"]
+
+[node name="Background" type="Sprite2D" parent="."]
+
+[node name="Wizard" parent="." instance=ExtResource("1_vsete")]
+
+[node name="Camera2D" parent="Wizard" index="5" node_paths=PackedStringArray("boundary_node")]
+boundary_node = NodePath("../../Boundary")
+camera_margin = 32
+
+[node name="Portal 1" parent="." instance=ExtResource("2_wmq38")]
+position = Vector2(118, 0)
+level_id = "Level 1"
+target_scene_path = "uid://pcl11sfjtjqm"
+
+[node name="Boundary" type="StaticBody2D" parent="."]
+
+[node name="L Wall" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(-638, -0.5)
+shape = SubResource("RectangleShape2D_wmq38")
+
+[node name="Ceiling" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(-23.25, -337)
+shape = SubResource("RectangleShape2D_eu3je")
+
+[node name="R Wall" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(594, 0)
+shape = SubResource("RectangleShape2D_6spwp")
+
+[node name="Floor" type="CollisionShape2D" parent="Boundary"]
+position = Vector2(-21, 337)
+shape = SubResource("RectangleShape2D_kiphe")
+
+[editable path="Wizard"]

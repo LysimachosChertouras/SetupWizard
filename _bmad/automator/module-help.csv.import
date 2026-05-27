@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://3uxne4fookmr"
+
+[deps]
+
+files=["res://_bmad/automator/module-help.skill.translation", "res://_bmad/automator/module-help.display.translation", "res://_bmad/automator/module-help.menu.translation", "res://_bmad/automator/module-help.description.translation", "res://_bmad/automator/module-help.action.translation", "res://_bmad/automator/module-help.args.translation", "res://_bmad/automator/module-help.phase.translation", "res://_bmad/automator/module-help.preceded.translation", "res://_bmad/automator/module-help.followed.translation", "res://_bmad/automator/module-help.required.translation", "res://_bmad/automator/module-help.output.translation", "res://_bmad/automator/module-help.outputs.translation"]
+
+source_file="res://_bmad/automator/module-help.csv"
+dest_files=["res://_bmad/automator/module-help.skill.translation", "res://_bmad/automator/module-help.display.translation", "res://_bmad/automator/module-help.menu.translation", "res://_bmad/automator/module-help.description.translation", "res://_bmad/automator/module-help.action.translation", "res://_bmad/automator/module-help.args.translation", "res://_bmad/automator/module-help.phase.translation", "res://_bmad/automator/module-help.preceded.translation", "res://_bmad/automator/module-help.followed.translation", "res://_bmad/automator/module-help.required.translation", "res://_bmad/automator/module-help.output.translation", "res://_bmad/automator/module-help.outputs.translation"]
+
+[params]
+
+compress=true
+delimiter=0

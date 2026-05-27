@@ -11,13 +11,21 @@ config_version=5
 [application]
 
 config/name="Setup Wizard"
-run/main_scene="uid://bwom6kpk0belt"
+run/main_scene="uid://bcwd7xvo8pu8t"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
 KeywordDB="*res://Scripts/Tokens/KeywordDB.gd"
+GlobalState="*res://Scripts/Scenes/GlobalState.gd"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/stretch/mode="canvas_items"
+window/stretch/scale_mode="integer"
 
 [editor]
 
@@ -68,3 +76,4 @@ Down={
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
+2d/snap/snap_2d_transforms_to_pixel=true

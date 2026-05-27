@@ -5,6 +5,8 @@ class_name DropZone
 @export var grid_color := Color(1, 1, 1, 0.3)
 @export var border_color := Color.WHITE
 
+@export var grid_visual: Sprite2D
+
 # Drag your EnterButton.tscn here in the Inspector!
 @export var row_button_scene: PackedScene
 
@@ -13,21 +15,39 @@ class_name DropZone
 @onready var shifter: GridShifter = $GridShifter
 @onready var button_manager: EnterButtonManager = $EnterButtonManager
 
+# Cache for the player's inventory
+var _inventory_ref: OrbitingInventory = null
+
 func _ready():
 	add_to_group("drop_zones")
-	queue_redraw()
+# Start with the grid hidden
+	if grid_visual:
+		grid_visual.visible = false
 
-func _draw():
-	if not collision_shape or not collision_shape.shape: return
-	var size = collision_shape.shape.size
-	var top_left = collision_shape.position - (size / 2)
-	var rect = Rect2(top_left, size)
+func _process(_delta: float) -> void:
+	_update_grid_visibility()
 
-	draw_rect(rect, border_color, false, 2.0)
-	for x in range(0, int(size.x), grid_size):
-		draw_line(top_left + Vector2(x, 0), top_left + Vector2(x, size.y), grid_color)
-	for y in range(0, int(size.y), grid_size):
-		draw_line(top_left + Vector2(0, y), top_left + Vector2(size.x, y), grid_color)
+func _update_grid_visibility() -> void:
+	if not grid_visual: return
+	
+	# Try to find the inventory if we don't have it yet
+	if not is_instance_valid(_inventory_ref):
+		var inv_nodes = get_tree().get_nodes_in_group("player_inventory")
+		if inv_nodes.size() > 0:
+			_inventory_ref = inv_nodes[0]
+	
+	# Update visibility based on whether the inventory has blocks
+	if is_instance_valid(_inventory_ref):
+		var is_holding_item = not _inventory_ref.is_empty()
+		
+		# Only update if the state actually changed to save performance
+		if grid_visual.visible != is_holding_item:
+			grid_visual.visible = is_holding_item
+	else:
+		# Fallback: Hide if no inventory found
+		if grid_visual.visible:
+			grid_visual.visible = false
+
 
 func on_item_placed(item: CodeBlock):
 	if not item.token_data: return
